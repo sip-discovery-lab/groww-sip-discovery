@@ -1,0 +1,23 @@
+name: Tests
+
+# Runs the safety and route tests on every push. Needs no secrets.
+# Deployment is done by Cloudflare Workers Builds, connected to this repo from the Cloudflare side.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build single-file worker
+        run: node build.mjs
+      - name: Safety-rule tests
+        run: node test/guard.mjs
+      - name: Route and logic tests (mock AI)
+        run: node test/run.mjs
