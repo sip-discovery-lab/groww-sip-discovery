@@ -145,7 +145,8 @@ const suiteOf = v => SUITES[v] ? v : "helper";
 async function evalStart(req, env, db) {
   const b = await readJson(req);
   const S = SUITES[suiteOf(b.suite)];
-  const recent = await db.prepare(`SELECT ts FROM eval_runs WHERE prompt_version = ? ORDER BY ts DESC LIMIT 1`).bind(S.version).first();
+  // Runs where every AI call failed (e.g. key missing) used no AI quota, so they don't start the cooldown.
+  const recent = await db.prepare(`SELECT ts FROM eval_runs WHERE prompt_version = ? AND NOT (complete = 1 AND errors >= n) ORDER BY ts DESC LIMIT 1`).bind(S.version).first();
   if (recent && Date.now() - Date.parse(recent.ts) < EVAL_COOLDOWN_MIN * 60000) {
     const wait = Math.ceil((EVAL_COOLDOWN_MIN * 60000 - (Date.now() - Date.parse(recent.ts))) / 60000);
     return json({ ok: false, error: `A check ran recently. To save the free AI limit, the next one can start in ${wait} min.` }, 429);
