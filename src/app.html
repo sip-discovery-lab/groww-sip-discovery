@@ -4,7 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Groww SIP Care · Concept</title>
-<meta name="description" content="Concept prototype for a Groww product case study: SIP Care, an AI agent that finds and fixes SIP instalment problems. Not an official Groww product.">
+<meta name="description" content="Concept prototype for a Groww product case study: SIP Care, an AI agent that answers any SIP question from your own account and the SIP rules, does safe steps itself and asks you before anything else. Not an official Groww product.">
+<meta name="theme-color" content="#00b386">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -105,12 +108,73 @@ nav.bottom div.on{color:var(--green-ink)}
 .fb button.opt[aria-pressed=true]{border-color:var(--green);background:var(--green-bg);color:var(--green-ink)}
 .foot{display:flex;justify-content:center;gap:16px;padding:4px 0 8px}
 .hidden{display:none!important}
+
+.nbadge{position:absolute;top:2px;right:2px;min-width:17px;height:17px;border-radius:9px;background:var(--amber);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--card)}
+.strip{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--green-bg);border-radius:12px;padding:10px 12px;margin-top:4px}
+.pulse{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 60%,transparent);animation:pl 1.8s infinite;flex:none}
+.pulse.off{animation:none;background:var(--muted)}
+@keyframes pl{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 55%,transparent)}70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.pill{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;height:32px;padding:0 10px;font:inherit;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap}
+.pill .msi{width:16px;height:16px}
+.obs{display:flex;gap:10px;align-items:flex-start;width:100%;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px;font:inherit;cursor:pointer;text-align:left}
+.obs.needs{border-color:var(--amber)}
+.issue .obs{background:var(--card)}
+.oi{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.oi .msi{width:18px;height:18px}
+.obs .chev{width:18px;height:18px;color:var(--muted);margin-top:8px}
+.trace{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px}
+.trace span{display:inline-flex;align-items:center;gap:4px}
+.trace span i{display:inline-block;width:14px;height:1px;background:var(--line);margin-right:2px}
+.trace span b{width:18px;height:18px;border-radius:50%;background:var(--subtle);display:inline-flex;align-items:center;justify-content:center}
+.trace span b .msi{width:12px;height:12px}
+.trace span.on{color:var(--green-ink);font-weight:600}.trace span.on b{background:var(--green);color:var(--on)}
+.an{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.an h4{margin:0 0 6px;font-size:13px;display:flex;align-items:center;gap:6px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.an h4 .msi{width:16px;height:16px}
+.an p{margin:0;font-size:14px}
+.an ul{margin:0;padding-left:18px;font-size:14px}.an li{margin:3px 0}
+.an.needs{border-color:var(--green);background:var(--green-bg)}
+.an .receipt{margin:4px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats div{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stats b{display:block;font-size:20px}.stats span{font-size:11px;color:var(--muted)}
+.dayh{font-size:12px;font-weight:700;color:var(--muted);margin:12px 0 6px;text-transform:uppercase;letter-spacing:.04em}
+#toasts{position:fixed;top:8px;left:0;right:0;z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 10px}
+.toast{pointer-events:auto;width:100%;max-width:410px;display:flex;gap:10px;align-items:flex-start;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:0 8px 28px rgba(0,0,0,.16);font:inherit;cursor:pointer;animation:drop .35s ease both;transition:opacity .4s,transform .4s}
+.toast b{display:block;font-size:13px}.toast span span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.toast.out{opacity:0;transform:translateY(-10px)}
+@keyframes drop{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+.dotu{width:9px;height:9px;border-radius:50%;background:var(--amber);flex:none;margin-top:6px}
+.top .ttl .aitag{margin-left:2px}
+.topics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.topic{display:flex;gap:10px;align-items:center;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px;font:inherit;font-size:13px;font-weight:600;text-align:left;cursor:pointer;min-height:56px}
+.topic .oi{background:var(--green-bg);color:var(--green-ink)}
+.topic:active{background:var(--subtle)}
+.ans{align-self:stretch;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ans .hd{display:flex;gap:6px;align-items:center;padding:10px 12px;background:var(--subtle);font-size:12px;font-weight:600}
+.ans .bd{padding:12px;display:flex;flex-direction:column;gap:10px}
+.ans h4{margin:0 0 4px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:flex;gap:6px;align-items:center}
+.ans h4 .msi{width:14px;height:14px}
+.ans ul{margin:0;padding-left:18px;font-size:13px}.ans li{margin:2px 0}
+.ans p{margin:0;font-size:14px}
+.work{align-self:stretch;border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:13px;display:flex;flex-direction:column;gap:6px}
+.work div{display:flex;gap:8px;align-items:center;color:var(--muted)}.work div.on{color:var(--ink)}.work div.ok{color:var(--green-ink)}
+.work .msi{width:16px;height:16px}
+.fups{display:flex;gap:6px;flex-wrap:wrap}
+.fups button{border:1px solid var(--green);background:var(--card);color:var(--green-ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:12px;cursor:pointer}
+.pf{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.pf div span{display:block;font-size:12px;color:var(--muted)}.pf div b{font-size:15px}
+.up{color:var(--green-ink)}.down{color:#d55}
+.sipmeta{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:6px;font-size:12px;color:var(--muted)}
+.sipmeta b{color:var(--ink);font-weight:500}
+details.tester{border:1px dashed var(--line);border-radius:var(--r);padding:12px 14px}
+details.tester summary{cursor:pointer;font-weight:600;font-size:14px}
 </style>
 </head>
 <body>
 <div class="phone" id="app"></div>
+<div id="toasts" aria-live="polite"></div>
 <script>
-const API = "";
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const IC = {
@@ -145,110 +209,215 @@ const IC = {
 };
 const FILLABLE = { home: 1, check_circle: 1, verified_user: 1 };
 const ic = (n, cls = "") => { const fill = /fill/.test(cls) && FILLABLE[n]; const spin = n === "progress_activity" ? " spin" : ""; return `<svg class="msi ${fill ? "fill" : ""}${spin} ${cls.replace("fill", "")}" viewBox="0 0 24 24" aria-hidden="true">${IC[n] || IC.info}</svg>`; };
-const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
-const post = async (p, b) => { try { const r = await fetch(API + p, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b || {}) }); return await r.json(); } catch (e) { return { ok: false, error: "Can't reach SIP Care right now. Check your connection and try again." }; } };
 
-const S = { session: store.get("sipcare_session"), view: null, pending: [], thread: [], lang: store.get("sipcare_lang") || "en", busy: false, lastFix: null, steps: [], fbDone: false, started: Date.now(), autoFixDone: false };
-const L = {
-  en: { ask: "Ask SIP Care about any SIP problem", chips: ["Is my money safe?", "Will my SIP be cancelled?", "Change my SIP date", "Mera paisa kat gaya par units nahi aaye"] },
-  hinglish: { ask: "Apni SIP ki koi bhi problem likhiye", chips: ["Kya mera paisa safe hai?", "Kya meri SIP cancel ho jayegi?", "SIP date badalni hai", "Paisa kat gaya par units nahi aaye"] },
-  hi: { ask: "अपनी SIP की कोई भी समस्या लिखिए", chips: ["क्या मेरा पैसा सुरक्षित है?", "क्या मेरी SIP बंद हो जाएगी?", "SIP की तारीख बदलनी है", "पैसा कट गया पर यूनिट नहीं आए"] },
-};
+IC.radar = '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 18 6"/>';
+IC.skip_next = '<path d="m5 5 9 7-9 7z"/><path d="M19 5v14"/>';
+IC.play = '<path d="m7 5 12 7-12 7z"/>';
+IC.pause = '<path d="M8 5v14M16 5v14"/>';
+IC.analytics = '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>';
+IC.notifications_active = IC.notifications + '<path d="M2 8c0-2 1-4 2.5-5.5M22 8c0-2-1-4-2.5-5.5"/>';
+IC.bubble = '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z"/>';
+
+IC.payments = '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>';
+IC.visibility_off = '<path d="M3 3l18 18"/><path d="M10.6 6.1A10 10 0 0 1 12 6c6 0 9.5 6 9.5 6a17 17 0 0 1-3 3.6M6.3 7.7A16 16 0 0 0 2.5 12s3.5 6 9.5 6a9.6 9.6 0 0 0 4.2-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>';
+IC.trending_up = '<path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/>';
+IC.wallet = '<path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/><circle cx="16" cy="14.5" r="1.2"/>';
+IC.percent = '<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>';
+IC.edit = '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>';
+IC.help = '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/>';
+IC.manage = '<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>';
+IC.doc = '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>';
+IC.flask = '<path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3"/><path d="M7 15h10"/>';
+
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+const post = async (p, b) => { try { const r = await fetch(p, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b || {}) }); return await r.json(); } catch (e) { return { ok: false, error: "Can't reach SIP Care right now. Check your connection." }; } };
+const inr = n => (n < 0 ? "-" : "") + "₹" + Math.abs(Math.round(Number(n))).toLocaleString("en-IN");
+const nth = n => n + (n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th");
+const hm = iso => { try { return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
+
+const S = { session: store.get("sipcare_session"), view: null, pending: [], gate: null, situations: [], chat: [], busy: false, work: 0, steps: [], lastFix: null, fbDone: store.get("sipcare_fb") === "1", lastTickAt: 0, nextTickMs: 12000, lang: store.get("sipcare_lang") || "en", seenObs: new Set() };
+
+// What the user can pick in SIP Care (they can also type anything).
+const TOPICS = [
+  ["payments", "Payment failed", { en: "My SIP payment failed. What happened and what should I do?", hinglish: "Meri SIP payment fail ho gayi. Kya hua aur ab kya karu?", hi: "मेरी SIP की पेमेंट फेल हो गई। क्या हुआ और अब क्या करूँ?" }],
+  ["visibility_off", "Not showing in app", { en: "Money was debited but my investment is not showing in the app.", hinglish: "Paisa kat gaya par investment app mein nahi dikh raha.", hi: "पैसा कट गया पर निवेश ऐप में नहीं दिख रहा।" }],
+  ["block", "Stop or close a SIP", { en: "I want to stop my SIP. What happens to my money?", hinglish: "Mujhe SIP band karni hai. Mere paise ka kya hoga?", hi: "मुझे SIP बंद करनी है। मेरे पैसे का क्या होगा?" }],
+  ["trending_up", "When will it grow?", { en: "When will my invested money grow?", hinglish: "Mera invested paisa kab badhega?", hi: "मेरा निवेश किया पैसा कब बढ़ेगा?" }],
+  ["wallet", "Withdraw money", { en: "When and how can I withdraw my money?", hinglish: "Main apna paisa kab aur kaise nikal sakta hoon?", hi: "मैं अपना पैसा कब और कैसे निकाल सकता हूँ?" }],
+  ["percent", "Tax & exit load", { en: "Will I pay tax or exit load if I withdraw now?", hinglish: "Abhi paisa nikalun to tax ya exit load lagega?", hi: "अभी पैसा निकालूँ तो टैक्स या एग्ज़िट लोड लगेगा?" }],
+  ["edit", "Change date or amount", { en: "How can I change my SIP date or amount?", hinglish: "SIP ki date ya amount kaise badlun?", hi: "SIP की तारीख या रकम कैसे बदलूँ?" }],
+  ["pause_circle", "Skip or pause", { en: "Can I skip or pause my SIP for a month?", hinglish: "Kya main ek mahine ke liye SIP skip ya pause kar sakta hoon?", hi: "क्या मैं एक महीने के लिए SIP रोक सकता हूँ?" }],
+  ["bolt", "AutoPay", { en: "Is my AutoPay working for all my SIPs?", hinglish: "Kya meri sab SIP ka AutoPay chal raha hai?", hi: "क्या मेरी सभी SIP का AutoPay चालू है?" }],
+  ["shield", "Is my money safe?", { en: "Is my money safe?", hinglish: "Kya mera paisa safe hai?", hi: "क्या मेरा पैसा सुरक्षित है?" }],
+];
+const TOPIC_LABEL = { payment_failed: "Payment", not_reflecting: "Not showing in app", stop_sip: "Stop or close", growth: "Growth", withdraw: "Withdrawal", tax: "Tax", exit_load: "Exit load", change_sip: "SIP change", autopay: "AutoPay", missed_instalment: "Missed instalment", is_money_safe: "Safety", will_sip_cancel: "SIP cancellation", status: "SIP status", how_to: "How it works", out_of_scope: "Outside SIP Care", unclear: "Question", greeting: "Hello" };
+const KIND_ICON = { payment_failed: ["payments", "warn"], units_pending: ["visibility_off", "warn"], autopay_expired: ["bolt", "warn"], units_allotted: ["check_circle", "ok"], redemption_credited: ["wallet", "ok"], sip_stopped: ["block", "mutedc"], autopay_active: ["bolt", "ok"] };
 
 function navBar() {
   const t = [["home", "Home"], ["explore", "Explore"], ["calendar_today", "SIPs"], ["pie_chart", "Portfolio"], ["person", "Account"]];
   return `<nav class="bottom" aria-label="App navigation (not active in this prototype)">${t.map(([i, l], k) => `<div class="${k === 0 ? "on" : ""}" aria-disabled="true">${ic(i, k === 0 ? "fill" : "")}${l}</div>`).join("")}</nav>`;
 }
+function topHome() {
+  const v = S.view;
+  return `<header class="top"><div class="brand"><span class="word">Groww</span><span class="concept">Concept</span></div><div class="row" style="gap:8px"><button class="iconbtn" aria-label="Search">${ic("search")}</button><button class="iconbtn" aria-label="Notifications" data-go="inbox">${ic("notifications")}${v && v.unread ? `<span class="nbadge">${v.unread}</span>` : ""}</button></div></header>`;
+}
+function topInner(title, extra) {
+  return `<header class="top inner"><div class="row" style="gap:6px;min-width:0"><button class="iconbtn" style="background:none" aria-label="Back" data-go="back">${ic("arrow_back")}</button><span class="sc">${ic("shield_with_heart")}</span><span class="ttl">${title}</span></div>${extra || ""}</header>`;
+}
+function agentStrip() {
+  const v = S.view;
+  const n = v.needs_you.length;
+  return `<div class="strip"><div class="row" style="gap:10px;min-width:0"><span class="pulse ${v.autoplay ? "" : "off"}"></span><div style="min-width:0"><div style="font-weight:600;font-size:13px">${n ? `SIP Care found ${n} thing${n > 1 ? "s" : ""} to look at` : "All SIPs on track"}</div><div class="muted" style="font-size:12px">SIP Care ${v.autoplay ? "is checking in the background" : "checks are paused"}${v.last_check ? " · last check " + hm(v.last_check) : ""}</div></div></div>
+    <button class="pill" data-act="toggle" aria-label="${v.autoplay ? "Pause" : "Resume"} background checks">${ic(v.autoplay ? "pause" : "play")}</button></div>`;
+}
 function fundRow(s) {
   const tone = { ok: "ok", warn: "warn", info: "info", muted: "mutedc" }[s.tone] || "mutedc";
-  return `<div class="fund"><div class="fi">${esc(s.fund[0])}</div><div style="flex:1;min-width:0"><div class="name">${esc(s.fund)}</div><div class="muted">${esc("₹" + Number(s.amount).toLocaleString("en-IN"))} · ${esc(s.day_label)}${s.skip_next ? " · next skipped" : ""}</div><div style="margin-top:6px"><span class="chip ${tone}">${ic(s.icon)}${esc(s.label)}</span></div></div></div>`;
+  const g = s.value - s.invested;
+  return `<div class="fund" style="align-items:flex-start"><div class="fi">${esc(s.fund[0])}</div><div style="flex:1;min-width:0"><div class="row" style="justify-content:space-between;gap:8px;align-items:flex-start"><div class="name">${esc(s.fund)}</div><span class="chip ${tone}" style="white-space:nowrap">${esc(s.label)}</span></div>
+    <div class="muted">${inr(s.amount)} monthly · ${nth(s.day)} of every month${s.skip_next ? " · next skipped" : ""}</div>
+    <div class="sipmeta"><span>Last invested <b>${esc(s.last_invested)}</b></span><span>Next <b>${esc(s.next)}</b></span><span>Invested <b>${inr(s.invested)}</b></span><span>Current <b class="${g >= 0 ? "up" : "down"}">${inr(s.value)}</b></span></div></div></div>`;
+}
+function noteCard(o, compact) {
+  const [i, t] = KIND_ICON[o.kind] || ["radar", "ok"];
+  const st = o.status === "open" ? '<span class="chip warn">Check with SIP Care</span>' : o.status === "resolved" ? `<span class="chip ok">${ic("check_circle")}Resolved</span>` : "";
+  return `<button class="obs ${o.status === "open" ? "needs" : ""}" data-note="${o.id}"><span class="oi ${t}">${ic(i)}</span><span style="flex:1;min-width:0;text-align:left"><b style="font-size:14px">${esc(o.title)}</b>${compact ? "" : `<span class="muted" style="display:block;margin-top:2px">${esc(o.notify)}</span>`}${st ? `<span class="row" style="margin-top:6px">${st}</span>` : ""}</span>${ic("arrow_forward", "chev")}</button>`;
 }
 
-// ---------------- HOME ----------------
+// ---------------- HOME (normal account) ----------------
 function home() {
   const v = S.view; if (!v) return loading();
-  const issues = v.issues;
-  const first = issues[0];
-  let attention = "";
-  if (S.lastFix) {
-    attention = `<div class="card success" id="successCard"><div class="row" style="justify-content:space-between"><span class="sc" style="width:32px;height:32px;border-radius:50%">${ic("check")}</span><span class="aitag">AI agent</span></div>
-      <h3 style="margin-top:10px">SIP Care fixed your SIP</h3><p style="margin:6px 0 0;font-size:14px">${esc(S.lastFix.replace(/^SIP Care: /, ""))}</p>
-      <button class="link" style="margin-top:10px" id="viewDid">View what SIP Care did ${ic("arrow_forward")}</button></div>`;
-  }
-  if (first) {
-    attention += `<div class="card issue"><div class="row" style="align-items:flex-start"><span class="chip warn" style="padding:6px;border-radius:50%">${ic("info")}</span><div><h3>${esc(issues.length > 1 ? `SIP Care found ${issues.length} issues` : first.title)}</h3><div style="font-size:13px;color:var(--amber);margin-top:2px">${esc(issues.length > 1 ? issues.map(i => i.title).join(" · ") : first.line)}</div></div></div>
-      <div class="safe">${ic("verified_user", "fill")}<span>Your invested money is safe. A fix is ready.</span></div>
-      <div class="row" style="justify-content:space-between;margin-bottom:12px"><span class="agentbadge"><span class="sc">${ic("shield_with_heart")}</span>SIP Care <span class="aitag">AI agent</span></span></div>
-      <button class="btn" id="fixBtn">${ic("auto_fix_high")} Fix with SIP Care</button></div>`;
-  }
-  const fb = S.lastFix && !S.fbDone ? feedbackCard() : "";
-  return `<header class="top"><div class="brand"><span class="word">Groww</span><span class="concept">Concept</span></div><div class="row" style="gap:8px"><button class="iconbtn" aria-label="Search">${ic("search")}</button><button class="iconbtn" aria-label="Notifications">${ic("notifications")}${issues.length ? '<span class="dot"></span>' : ""}</button></div></header>
+  const needs = v.needs_you;
+  const latest = v.observations.filter(o => o.status !== "open").slice(0, 3);
+  const g = v.gain, pct = v.invested ? (g / v.invested * 100) : 0;
+  const success = S.lastFix ? `<div class="card success" id="successCard"><div class="row" style="justify-content:space-between"><span class="sc" style="width:32px;height:32px;border-radius:50%">${ic("check")}</span><span class="aitag">AI agent</span></div><h3 style="margin-top:10px">Done by SIP Care</h3><p style="margin:6px 0 0;font-size:14px">${esc(S.lastFix.replace(/^SIP Care: /, ""))}</p><p class="muted" style="margin:6px 0 0">SIP Care will follow up and notify you when it's complete.</p></div>` : "";
+  const needsBlock = needs.length ? `<div class="card issue"><div class="row" style="align-items:flex-start"><span class="chip warn" style="padding:6px;border-radius:50%">${ic("info")}</span><div><h3>SIP Care spotted ${needs.length > 1 ? needs.length + " things" : "something"}</h3><div style="font-size:13px;color:var(--amber);margin-top:2px">Your invested money is safe. Tap to see what happened and what you can do.</div></div></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${needs.map(o => noteCard(o)).join("")}</div></div>` : "";
+  return `${topHome()}
   <main>
-    <div class="row" style="justify-content:space-between"><h2>Hi ${esc(v.user)}</h2></div>
-    <div class="card value"><div class="row" style="justify-content:space-between"><span class="muted" style="font-weight:500">Total Mutual Funds</span></div><div class="row" style="gap:8px;margin-top:6px;align-items:baseline"><span class="big">₹3,120</span><span class="muted">Current value</span></div><div class="muted" style="margin-top:4px">Invested ₹3,000 · ${v.sips.filter(s => s.label !== "Stopped").length} active SIPs</div></div>
-    ${attention}
-    ${fb}
+    ${agentStrip()}
+    <h2>Hi ${esc(v.user)}</h2>
+    ${success}
+    ${needsBlock}
+    ${S.lastFix && !S.fbDone ? feedbackCard() : ""}
+    <div class="card value"><div class="muted" style="font-weight:500">Mutual Funds · current value</div><div class="row" style="gap:8px;margin-top:6px;align-items:baseline"><span class="big">${inr(v.value)}</span><span class="${g >= 0 ? "up" : "down"}" style="font-weight:600;font-size:13px">${g >= 0 ? "+" : ""}${inr(g)} (${pct.toFixed(2)}%)</span></div>
+      <div class="pf"><div><span>Invested</span><b>${inr(v.invested)}</b></div><div><span>Last SIP date</span><b>${esc(v.last_sip)}</b></div></div>
+      <div class="muted" style="margin-top:8px">${v.active_sips} active SIPs · next instalment ${esc(v.next_sip)}</div></div>
     <div class="qa">
-      <button class="live" id="qaCare"><span class="tile">${ic("shield_with_heart")}${issues.length ? `<span class="badge">${issues.length}</span>` : ""}</span>SIP Care</button>
+      <button class="live" data-go="care"><span class="tile">${ic("shield_with_heart")}${needs.length ? `<span class="badge">${needs.length}</span>` : ""}</span>SIP Care</button>
       <button aria-disabled="true"><span class="tile">${ic("calendar_month")}</span>My SIPs</button>
       <button aria-disabled="true"><span class="tile">${ic("receipt_long")}</span>Orders</button>
       <button aria-disabled="true"><span class="tile">${ic("bolt")}</span>Autopilot</button>
     </div>
+    <div class="card"><div class="row" style="justify-content:space-between"><div class="agentbadge"><span class="sc">${ic("shield_with_heart")}</span>Ask SIP Care</div><span class="aitag">AI agent</span></div>
+      <p class="muted" style="margin:8px 0 10px">Any question about your SIPs. SIP Care checks your account and SIP rules, then answers for you.</p>
+      <div class="topics">${TOPICS.slice(0, 4).map((t, i) => `<button class="topic" data-topic="${i}"><span class="oi">${ic(t[0])}</span>${t[1]}</button>`).join("")}</div>
+      <button class="link" style="margin-top:10px" data-go="care">More topics or type your own question ${ic("arrow_forward")}</button></div>
+    ${latest.length ? `<div><div class="sectionh"><h3>Updates from SIP Care</h3><button class="link" data-go="inbox">All</button></div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">${latest.map(o => noteCard(o, true)).join("")}</div></div>` : ""}
     <div class="sectionh"><h3>Your SIPs</h3><span class="muted">${v.sips.length} SIPs</span></div>
     ${v.sips.map(fundRow).join("")}
-    <div class="card" style="background:var(--subtle);border:0"><div class="row" style="align-items:flex-start">${ic("health_and_safety")}<div><div style="font-weight:600;font-size:14px">Protected with SIP Care</div><div class="muted" style="margin-top:2px">SIP Care watches your SIPs and prepares a fix when something goes wrong. It does safe things itself and asks you before anything that moves money or changes a SIP.</div></div></div></div>
-    <div class="foot"><a class="link" href="/quality" target="_blank" rel="noopener">How SIP Care is tested</a><button class="link" id="reset">Reset demo</button></div>
+    ${alertsCard()}
+    <details class="tester"><summary>${ic("flask")} For testers: try a situation</summary><p class="muted" style="margin:6px 0 10px">Your account is normal. Switch on a situation to see how SIP Care notices it, notifies you and helps.</p><div style="display:flex;flex-direction:column;gap:8px">${S.situations.map(x => `<button class="btn sec" style="height:40px" data-sit="${x.id}">${esc(x.label)}</button>`).join("")}</div></details>
+    <div class="card" style="background:var(--subtle);border:0"><div class="row" style="align-items:flex-start">${ic("health_and_safety")}<div><div style="font-weight:600;font-size:14px">How SIP Care works</div><div class="muted" style="margin-top:2px">You ask, SIP Care checks your SIPs, payments and orders plus the SIP rules, and answers for you. It does safe steps itself (track an order, set a reminder, draft a support message) and asks you before anything that moves money or changes a SIP. It keeps checking in the background and tells you when things finish.</div></div></div></div>
+    <div class="foot"><a class="link" href="/quality" target="_blank" rel="noopener">How SIP Care is tested</a><button class="link" data-act="reset">Reset demo</button></div>
     <p class="muted" style="text-align:center;margin:0">Concept prototype for a Groww case study · not an official Groww product · demo data · not investment advice</p>
   </main>${navBar()}`;
+}
+function alertsCard() {
+  const perm = "Notification" in window ? Notification.permission : "unsupported";
+  if (perm === "granted" && store.get("sipcare_push") === "1") return `<div class="card" style="border-style:dashed"><div class="row">${ic("notifications_active")}<div><b style="font-size:14px">SIP Care alerts are on</b><div class="muted">You'll get alerts on this device, even with the app closed.</div></div></div></div>`;
+  return `<div class="card"><div class="row" style="align-items:flex-start">${ic("notifications_active")}<div style="flex:1"><b style="font-size:14px">Get SIP Care alerts on this device</b><div class="muted">SIP Care keeps checking when you close the app and alerts you when something changes.</div><button class="btn sec" style="margin-top:10px;height:40px" data-act="alerts">Turn on alerts</button><div class="muted" id="alertsMsg" style="margin-top:6px"></div></div></div></div>`;
 }
 function feedbackCard() {
   const q = (k, opts) => `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${opts.map(([v, t]) => `<button class="opt" data-k="${k}" data-v="${v}" aria-pressed="false">${t}</button>`).join("")}</div>`;
   return `<div class="card fb" id="fb"><h3>3 quick questions</h3><p class="muted" style="margin:2px 0 8px">Helps us learn if SIP Care worked for you. No personal data.</p>
-    <div style="font-size:13px;font-weight:500">Did you understand what happened to your money?</div>${q("understood", [["yes", "Yes"], ["partly", "Partly"], ["no", "No"]])}
-    <div style="font-size:13px;font-weight:500;margin-top:10px">Was your SIP fixed?</div>${q("fixed", [["yes", "Yes"], ["no", "No"]])}
+    <div style="font-size:13px;font-weight:500">Did SIP Care answer your question?</div>${q("understood", [["yes", "Yes"], ["partly", "Partly"], ["no", "No"]])}
+    <div style="font-size:13px;font-weight:500;margin-top:10px">Did it solve your problem?</div>${q("fixed", [["yes", "Yes"], ["no", "No"]])}
     <div style="font-size:13px;font-weight:500;margin-top:10px">How clear was it? (1 = confusing, 5 = very clear)</div>${q("clarity", [1, 2, 3, 4, 5].map(n => [n, n]))}
     <button class="btn" style="margin-top:12px" id="fbSend">Submit</button><div class="muted" id="fbMsg" style="margin-top:6px"></div></div>`;
 }
 
-// ---------------- SIP CARE (agent) ----------------
+// ---------------- NOTE (what SIP Care noticed) ----------------
+function noteScreen(id) {
+  const v = S.view; if (!v) return loading();
+  const o = v.observations.find(x => x.id === id);
+  if (!o) return `${topInner("SIP Care")}<main><div class="notice" style="margin-top:16px">This update is no longer available.</div></main>${navBar()}`;
+  return `${topInner(`SIP Care <span class="aitag">AI agent</span>`)}
+  <main>
+    <div><div class="row" style="gap:6px">${o.status === "open" ? '<span class="chip warn">Needs a look</span>' : `<span class="chip ok">${ic("check_circle")}${o.status === "resolved" ? "Resolved" : "Update"}</span>`}<span class="muted" style="font-size:12px">${esc(o.at_day)}</span></div>
+      <h2 style="margin-top:8px">${esc(o.title)}</h2>${o.fund ? `<div class="muted">${esc(o.fund)}</div>` : ""}</div>
+    <section class="an"><h4>${ic("info")} What happened</h4><p>${esc(o.what)}</p></section>
+    ${o.why && o.why.length ? `<section class="an"><h4>${ic("analytics")} What SIP Care checked</h4><ul>${o.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul></section>` : ""}
+    ${o.impact ? `<section class="an"><h4>${ic("verified_user")} What it means for you</h4><p>${esc(o.impact)}</p></section>` : ""}
+    ${o.status === "open" && o.ask ? `<button class="btn" data-ask="${esc(o.ask)}">${ic("shield_with_heart")} Ask SIP Care what to do</button>` : ""}
+  </main>${navBar()}`;
+}
+
+// ---------------- SIP CARE (user-led) ----------------
 function care() {
   const v = S.view; if (!v) return loading();
   const langBtns = [["en", "EN"], ["hinglish", "Hinglish"], ["hi", "हिंदी"]].map(([k, t]) => `<button data-lang="${k}" aria-pressed="${S.lang === k}">${t}</button>`).join("");
-  const issues = v.issues.map(i => `<div class="fund"><div class="fi">${esc(((v.sips.find(x => x.id === i.sip_id) || {}).fund || "S")[0])}</div><div style="flex:1;min-width:0"><div class="name">${esc(i.title)}</div><div class="muted">${esc(i.line)}</div></div><button class="btn sec" style="width:auto;height:36px;padding:0 14px" data-fix="${i.sip_id}">Fix</button></div>`).join("");
-  return `<header class="top inner"><div class="row" style="gap:6px"><button class="iconbtn" style="background:none" aria-label="Back" id="back">${ic("arrow_back")}</button><span class="sc">${ic("shield_with_heart")}</span><span class="ttl">SIP Care <span class="aitag">AI agent</span></span></div><div class="lang" role="group" aria-label="Language">${langBtns}</div></header>
-  <main style="padding-bottom:180px">
-    <p class="muted" style="margin:6px 0 0">Finds and fixes SIP problems for you. Safe steps happen automatically; anything that moves money or changes a SIP waits for your confirm.</p>
-    ${v.issues.length ? `<div><h3 style="margin-bottom:8px">Found for you</h3><div style="display:flex;flex-direction:column;gap:8px">${issues}</div></div>` : `<div class="card success"><div class="row">${ic("check_circle", "fill")}<b>All your SIPs are on track</b></div></div>`}
-    <div class="thread" id="thread">${S.thread.map(renderItem).join("")}</div>
-    ${S.busy ? `<div class="msg agent"><span class="typing"><i></i><i></i><i></i></span></div>` : ""}
-    ${S.pending.length ? `<button class="btn" id="review">${ic("task_alt")} Review and confirm (${S.pending.length})</button>` : ""}
+  const empty = !S.chat.length;
+  return `${topInner(`SIP Care <span class="aitag">AI agent</span>`, `<div class="lang" role="group" aria-label="Language">${langBtns}</div>`)}
+  <main style="padding-bottom:170px">
+    ${empty ? `<div class="hero" style="padding-top:6px"><div class="halo" style="width:64px;height:64px">${ic("shield_with_heart")}</div><h2 style="margin:0">What would you like to check?</h2><p class="muted" style="margin:0">Pick a topic or type any question about your SIPs. I'll look at your account and the SIP rules and answer for you.</p></div>` : ""}
+    ${v.needs_you.length && empty ? `<div class="card issue" style="padding:12px"><div style="font-size:13px;font-weight:600;color:var(--amber);margin-bottom:8px">I noticed something on your account</div>${v.needs_you.map(o => `<button class="obs" data-ask="${esc(o.ask)}"><span class="oi warn">${ic((KIND_ICON[o.kind] || ["info"])[0])}</span><span style="flex:1;text-align:left"><b style="font-size:14px">${esc(o.title)}</b><span class="muted" style="display:block">Tap to check it with me</span></span>${ic("arrow_forward", "chev")}</button>`).join("")}</div>` : ""}
+    ${empty ? `<div class="topics">${TOPICS.map((t, i) => `<button class="topic" data-topic="${i}"><span class="oi">${ic(t[0])}</span>${t[1]}</button>`).join("")}</div>` : ""}
+    <div class="thread">${S.chat.map(renderChat).join("")}${S.busy ? workBox() : ""}</div>
+    ${!empty && !S.busy ? `<button class="link" data-act="topics" style="align-self:flex-start">${ic("help")} Ask about something else</button>` : ""}
   </main>
-  <div class="composer"><div class="chips">${L[S.lang].chips.map(c => `<button data-chip="${esc(c)}">${esc(c)}</button>`).join("")}</div>
-    <form class="inp" id="ask"><input id="q" maxlength="500" autocomplete="off" placeholder="${esc(L[S.lang].ask)}" aria-label="Message SIP Care"><button aria-label="Send">${ic("send")}</button></form>
+  <div class="composer">
+    <form class="inp" id="ask"><input id="q" maxlength="500" autocomplete="off" placeholder="Ask anything about your SIPs" aria-label="Message SIP Care"><button aria-label="Send">${ic("send")}</button></form>
     <div class="muted" style="font-size:11px">Don't share PAN, account numbers, OTP or PIN. SIP Care never asks for them.</div></div>
   ${navBar()}`;
 }
-function renderItem(it) {
+function workBox() {
+  const L = ["Reading your SIPs, payments and orders", "Checking SIP rules and app guidelines", "Working out your answer"];
+  return `<div class="work">${L.map((t, i) => `<div class="${i < S.work ? "ok" : i === S.work ? "on" : ""}">${i < S.work ? ic("check_circle") : i === S.work ? ic("progress_activity") : ic("schedule")}${t}</div>`).join("")}</div>`;
+}
+function answerCard(it) {
+  const r = it.r;
+  return `<div class="ans"><div class="hd"><span class="sc" style="width:20px;height:20px;border-radius:6px">${ic("shield_with_heart")}</span>SIP Care · ${esc(TOPIC_LABEL[r.topic] || "Answer")}<span style="flex:1"></span>${r.used_ai ? '<span class="aitag">AI</span>' : '<span class="stdtag">Standard</span>'}</div><div class="bd">
+    ${r.found && r.found.length ? `<div><h4>${ic("analytics")} What I found in your account</h4><ul>${r.found.map(f => `<li>${esc(f)}</li>`).join("")}</ul></div>` : ""}
+    <div><h4>${ic("verified_user")} Answer</h4><p>${esc(r.answer)}</p></div>
+    ${r.next && r.next.length ? `<div><h4>${ic("schedule")} What happens next</h4><ul>${r.next.map(f => `<li>${esc(f)}</li>`).join("")}</ul></div>` : ""}
+    ${(r.done || []).length ? `<div><h4>${ic("check_circle")} Done automatically</h4>${r.done.map(d => `<div class="receipt">${ic("check_circle", "fill")}<span>${esc(d)}</span></div>`).join("")}</div>` : ""}
+    ${(r.skipped || []).length ? `<div><h4>${ic("info")} Not possible</h4>${r.skipped.map(k => `<div class="muted">• ${esc(k.why)}</div>`).join("")}</div>` : ""}
+    ${(r.proposals || []).length ? `<div><h4>${ic("task_alt")} Needs your OK</h4><div style="display:flex;flex-direction:column;gap:8px">${r.proposals.map(p => propState(p, it)).join("")}</div></div>` : ""}
+    ${r.followups && r.followups.length && it.last ? `<div class="fups">${r.followups.map(f => `<button data-chip="${esc(f)}">${esc(f)}</button>`).join("")}</div>` : ""}
+  </div></div>`;
+}
+function propState(p, it) {
+  const still = S.pending.some(x => x.id === p.id);
+  if (still) return propCard(p);
+  const st = (it.states || {})[p.id];
+  return `<div class="prop"><div class="t">${esc(p.title)}</div><div class="muted" style="margin-top:4px">${st === "declined" ? "Not done" : st === "done" ? "✓ Done" : "No longer needed"}</div></div>`;
+}
+function propCard(p) {
+  return `<div class="prop ${p.danger ? "danger" : ""}"><div class="t">${esc(p.title)}</div><div class="s">${esc(p.summary)}</div><div class="row" style="gap:8px;margin-top:10px"><button class="btn" style="height:38px" data-confirm="${p.id}">Review &amp; confirm</button><button class="btn ghost" style="height:38px;width:auto;padding:0 12px" data-decline="${p.id}">Not now</button></div></div>`;
+}
+function renderChat(it, i) {
   if (it.kind === "user") return `<div class="msg user">${esc(it.text)}</div>`;
-  if (it.kind === "agent") return `<div class="msg agent"><div class="meta"><span class="sc" style="width:20px;height:20px;border-radius:6px">${ic("shield_with_heart")}</span><b style="font-size:12px">SIP Care</b>${it.ai ? '<span class="aitag">AI</span>' : '<span class="stdtag">Standard</span>'}</div>${esc(it.text)}</div>`;
+  if (it.kind === "answer") return answerCard(Object.assign(it, { last: i === S.chat.length - 1 }));
   if (it.kind === "notice") return `<div class="notice">${esc(it.text)}</div>`;
-  if (it.kind === "done") return `<div class="receipt">${ic("check_circle", "fill")}<span><b>Done automatically:</b> ${esc(it.text)}</span></div>`;
-  if (it.kind === "skip") return `<div class="receipt" style="color:var(--muted)">${ic("info")}<span>Not possible: ${esc(it.text)}</span></div>`;
-  if (it.kind === "prop") { const p = it.p; const still = S.pending.some(x => x.id === p.id); return `<div class="prop ${p.danger ? "danger" : ""}"><div class="t">${esc(p.title)}${p.isNew ? '<span class="newtag">New</span>' : ""}</div><div class="s">${esc(p.summary)}</div>${still ? `<div class="row" style="gap:8px;margin-top:10px"><button class="btn" style="height:38px" data-confirm="${p.id}">Confirm</button><button class="btn ghost" style="height:38px;width:auto;padding:0 12px" data-decline="${p.id}">Not now</button></div>` : `<div class="muted" style="margin-top:6px">${it.state === "declined" ? "Not done" : "✓ Done"}</div>`}</div>`; }
   return "";
 }
 
-// ---------------- CONFIRM SHEET ----------------
+// ---------------- INBOX ----------------
+function inbox() {
+  const v = S.view; if (!v) return loading();
+  return `${topInner("Notifications")}<main>${v.inbox.length ? v.inbox.map(n => { const [i, t] = n.level === "alert" ? ["warning", "warn"] : ["radar", "ok"]; return `<button class="obs" data-note="${n.obs_id}"><span class="oi ${t}">${ic(i)}</span><span style="flex:1;text-align:left"><span class="row" style="justify-content:space-between"><b style="font-size:14px">SIP Care · ${esc(n.title)}</b><span class="muted" style="font-size:11px">${hm(n.at)}</span></span><span class="muted" style="display:block;margin-top:2px">${esc(n.body)}</span></span>${n.read ? "" : '<span class="dotu"></span>'}</button>`; }).join("") : `<div class="card success"><div class="row">${ic("check_circle", "fill")}<b>All quiet</b></div><div class="muted" style="margin-top:4px">SIP Care will notify you here when something changes on your SIPs.</div></div>`}</main>${navBar()}`;
+}
+
+// ---------------- CONFIRM + DONE ----------------
 function openConfirm(ids) {
   const props = S.pending.filter(p => ids.includes(p.id));
   if (!props.length) return;
   const w = document.createElement("div"); w.className = "sheetwrap"; w.id = "sheet";
   w.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cfT"><div class="handle"></div>
     <div class="row" style="justify-content:space-between"><span class="chip ok">${ic("auto_fix_high")}AI agent</span><button class="iconbtn" style="background:none" id="cfX" aria-label="Close">${ic("close")}</button></div>
-    <h3 id="cfT" style="font-size:20px;margin-top:8px">Confirm SIP Care's fix</h3>
-    <p class="muted" style="font-size:14px">Nothing happens until you confirm. Untick anything you don't want.</p>
-    ${props.map(p => `<label class="check"><input type="checkbox" data-pid="${p.id}" checked><div style="flex:1"><div style="font-weight:600;font-size:14px">${esc(p.title)}${p.isNew ? '<span class="newtag">New</span>' : ""}</div><div class="muted">${esc(p.summary)}</div>${(p.rows || []).length ? `<div class="kv">${p.rows.map(([k, val]) => `<div><span>${esc(k)}</span><span>${esc(val)}</span></div>`).join("")}</div>` : ""}${p.note ? `<div class="notice" style="margin-top:8px;color:${p.danger ? "var(--muted)" : "var(--amber)"};background:${p.danger ? "var(--subtle)" : "var(--amber-bg)"}">${esc(p.note)}</div>` : ""}</div></label>`).join("")}
-    <button class="btn" style="margin-top:14px" id="cfGo">${ic("bolt")} Confirm and fix</button>
+    <h3 id="cfT" style="font-size:20px;margin-top:8px">Confirm with SIP Care</h3>
+    <p class="muted" style="font-size:14px">Nothing happens until you confirm.</p>
+    ${props.map(p => `<label class="check"><input type="checkbox" data-pid="${p.id}" checked><div style="flex:1"><div style="font-weight:600;font-size:14px">${esc(p.title)}</div><div class="muted">${esc(p.summary)}</div>${(p.rows || []).length ? `<div class="kv">${p.rows.map(([k, val]) => `<div><span>${esc(k)}</span><span>${esc(val)}</span></div>`).join("")}</div>` : ""}${p.note ? `<div class="notice" style="margin-top:8px;${p.danger ? "color:var(--muted);background:var(--subtle)" : ""}">${esc(p.note)}</div>` : ""}</div></label>`).join("")}
+    <button class="btn" style="margin-top:14px" id="cfGo">${ic("bolt")} Confirm</button>
     <button class="btn ghost" style="margin-top:4px" id="cfBack">Go back</button></div>`;
   document.body.appendChild(w);
   const close = () => w.remove();
@@ -257,100 +426,150 @@ function openConfirm(ids) {
   $("#cfGo").onclick = async () => {
     const chosen = [...w.querySelectorAll("[data-pid]")].filter(x => x.checked).map(x => x.dataset.pid);
     if (!chosen.length) { close(); return; }
-    $("#cfGo").disabled = true; $("#cfGo").innerHTML = `${ic("progress_activity")} Scheduling fix…`;
+    $("#cfGo").disabled = true; $("#cfGo").innerHTML = `${ic("progress_activity")} SIP Care is working…`;
     const r = await post("/api/agent/confirm", { session_id: S.session, proposal_ids: chosen });
     close();
-    if (!r.ok) { S.thread.push({ kind: "notice", text: r.error || "Couldn't complete that. Please try again." }); render(); return; }
-    S.thread.forEach(it => { if (it.kind === "prop" && chosen.includes(it.p.id)) it.state = "done"; });
-    S.pending = r.pending; S.view = r.view; S.steps = r.steps; S.lastFix = r.home_message; S.fbDone = false;
-    (r.failed || []).forEach(f => S.thread.push({ kind: "skip", text: `${f.title}: ${f.why}` }));
+    if (!r.ok) { toast({ title: "Couldn't complete that", notify: r.error || "Please try again." }); return; }
+    S.chat.forEach(it => { if (it.kind === "answer") chosen.forEach(id => { it.states = it.states || {}; it.states[id] = "done"; }); });
+    S.pending = r.pending; S.view = r.view; S.steps = r.steps; S.lastFix = r.home_message;
+    (r.failed || []).forEach(f => toast({ title: "Not possible", notify: `${f.title}: ${f.why}` }));
     go("fixing");
   };
 }
-
-// ---------------- FIXING ----------------
 function fixing() {
-  return `<header class="top inner"><div class="row" style="gap:6px"><span class="sc">${ic("shield_with_heart")}</span><span class="ttl">SIP Care <span class="aitag">AI agent</span></span></div></header>
-  <main><div class="hero"><div class="halo">${ic("verified_user", "fill")}</div><h2>SIP Care is fixing this</h2><p class="muted" style="margin:0">You confirmed this fix</p></div>
+  return `${topInner(`SIP Care <span class="aitag">AI agent</span>`)}
+  <main><div class="hero"><div class="halo">${ic("verified_user", "fill")}</div><h2>SIP Care is on it</h2><p class="muted" style="margin:0">You confirmed this</p></div>
     <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:12px"><span class="muted" style="font-weight:500">Actions</span><span class="chip ok" id="cnt">0 / ${S.steps.length} complete</span></div><div class="steps" id="steps"></div></div>
     <div id="doneBox" class="hidden" style="display:flex;flex-direction:column;gap:10px">
-      <div class="card success"><div class="row" style="font-weight:600;color:var(--green-ink)">${ic("check_circle", "fill")} Done. Your SIP is active.</div></div>
-      <div class="card" style="background:var(--subtle);border:0"><div class="row" style="align-items:flex-start">${ic("shield")}<div><div style="font-weight:600;font-size:14px">Your invested money is safe</div><div class="muted">Units you already hold are not affected.</div></div></div></div>
-      <button class="btn" id="toHome">Back to Home ${ic("arrow_forward")}</button></div>
+      <div class="card success"><div class="row" style="font-weight:600;color:var(--green-ink)">${ic("check_circle", "fill")} Done.</div><div class="muted" style="margin-top:4px">SIP Care keeps checking and will notify you when it's complete.</div></div>
+      <button class="btn" id="toHome">Back to Home ${ic("arrow_forward")}</button><button class="btn ghost" id="toCare">Back to SIP Care</button></div>
   </main>${navBar()}`;
 }
 function runSteps() {
   let n = 0;
   const t = setInterval(() => {
-    if (n < S.steps.length) {
-      $("#steps").insertAdjacentHTML("beforeend", `<div class="step"><span class="b">${ic("check")}</span><div style="font-size:14px;font-weight:500">${esc(S.steps[n])}</div></div>`);
-      n++; $("#cnt").textContent = `${n} / ${S.steps.length} complete`;
-    } else { clearInterval(t); $("#doneBox").classList.remove("hidden"); $("#toHome").onclick = () => go("home"); }
+    if (!$("#steps")) { clearInterval(t); return; }
+    if (n < S.steps.length) { $("#steps").insertAdjacentHTML("beforeend", `<div class="step"><span class="b">${ic("check")}</span><div style="font-size:14px;font-weight:500">${esc(S.steps[n])}</div></div>`); n++; $("#cnt").textContent = `${n} / ${S.steps.length} complete`; }
+    else { clearInterval(t); $("#doneBox").classList.remove("hidden"); $("#toHome").onclick = () => go("home"); $("#toCare").onclick = () => go("care"); }
   }, 450);
 }
 
-// ---------------- AGENT CALLS ----------------
-async function send(message, shown) {
-  if (S.busy) return;
-  S.busy = true;
-  S.thread.push({ kind: "user", text: shown || message });
-  render(); scrollEnd();
-  const r = await post("/api/agent/message", { session_id: S.session, message, lang: S.lang });
-  S.busy = false;
-  if (!r.ok) { if (/session/.test(r.error || "")) await start(true); S.thread.push({ kind: "notice", text: r.error || "Something went wrong." }); render(); return; }
-  if (r.redacted && r.redacted.length) S.thread.push({ kind: "notice", text: `We removed what looked like your ${r.redacted.join(", ")}. Please don't share these.` });
-  if (r.notice) S.thread.push({ kind: "notice", text: r.notice });
-  S.thread.push({ kind: "agent", text: r.reply, ai: r.used_ai });
-  (r.done || []).forEach(d => S.thread.push({ kind: "done", text: d }));
-  (r.skipped || []).forEach(sk => S.thread.push({ kind: "skip", text: sk.why }));
-  (r.proposals || []).forEach(p => S.thread.push({ kind: "prop", p }));
-  S.pending = r.pending; S.view = r.view;
-  render(); scrollEnd();
+// ---------------- notifications ----------------
+function toast(o) {
+  const el = document.createElement("button");
+  el.className = "toast"; el.innerHTML = `<span class="sc">${ic("shield_with_heart")}</span><span style="flex:1;text-align:left"><b>${/^SIP Care/.test(o.title) ? "" : "SIP Care · "}${esc(o.title)}</b><span>${esc(o.notify)}</span></span>`;
+  el.onclick = () => { el.remove(); if (o.id) go("note/" + o.id); };
+  $("#toasts").appendChild(el);
+  setTimeout(() => el.classList.add("out"), 6500); setTimeout(() => el.remove(), 7000);
 }
-async function start(reset) {
-  const r = await post("/api/agent/start", { session_id: reset ? "" : S.session, reset: !!reset });
-  if (!r.ok) { $("#app").innerHTML = `<main><div class="notice" style="margin-top:20px">${esc(r.error || "Can't load the demo.")}</div></main>`; return false; }
-  S.session = r.session_id; store.set("sipcare_session", r.session_id);
-  S.view = r.view; S.pending = r.pending || [];
-  if (reset) { S.thread = []; S.lastFix = null; S.fbDone = false; S.autoFixDone = false; }
-  return true;
+async function systemNotify(o) {
+  if (!("Notification" in window) || Notification.permission !== "granted" || document.visibilityState === "visible") return;
+  try { const reg = await navigator.serviceWorker.getRegistration(); if (reg) reg.showNotification((/^SIP Care/.test(o.title) ? "" : "SIP Care · ") + o.title, { body: o.notify, icon: "/icon.svg", tag: o.id, data: { url: "/#/note/" + o.id } }); } catch (e) {}
+}
+function announce(fresh) { (fresh || []).filter(o => !S.seenObs.has(o.id)).forEach(o => { S.seenObs.add(o.id); toast(o); systemNotify(o); }); }
+async function enableAlerts() {
+  const msg = t => { const m = $("#alertsMsg"); if (m) m.textContent = t; };
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) { msg("This browser doesn't support alerts. Use Chrome, Edge or Firefox; on iPhone, add this page to your Home Screen first."); return; }
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") { msg("Alerts are blocked. Allow notifications for this site in your browser settings."); return; }
+  try {
+    const reg = await navigator.serviceWorker.register("/sw.js"); await navigator.serviceWorker.ready;
+    const k = await (await fetch("/api/agent/push-key")).json();
+    const key = Uint8Array.from(atob(k.key.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((k.key.length + 3) % 4)), c => c.charCodeAt(0));
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+    const r = await post("/api/agent/push-subscribe", { session_id: S.session, subscription: sub.toJSON() });
+    if (!r.ok) throw new Error(r.error);
+    store.set("sipcare_push", "1"); render();
+    reg.showNotification("SIP Care alerts are on", { body: "SIP Care will alert you here when something changes on your SIPs, even with the app closed.", icon: "/icon.svg" });
+  } catch (e) { msg("Couldn't turn on alerts: " + (e.message || e)); }
 }
 
-// ---------------- ROUTER ----------------
-let screen = "home";
-function go(s, opts) { screen = s; try { history.replaceState(null, "", s === "home" ? "#/" : "#/" + s); } catch (e) {} render(); window.scrollTo(0, 0); if (s === "fixing") runSteps(); if (opts && opts.autofix) autoFix(); }
+// ---------------- data + loop ----------------
+function apply(r) { if (!r || !r.ok) return; S.view = r.view; S.pending = r.pending || []; if (r.gate) S.gate = r.gate; if (r.situations) S.situations = r.situations; if (r.next_tick_ms) S.nextTickMs = r.next_tick_ms; }
+async function start(reset) {
+  const r = await post("/api/agent/start", { session_id: reset ? "" : S.session, reset: !!reset, lang: S.lang });
+  if (!r.ok) { $("#app").innerHTML = `<main><div class="notice" style="margin-top:20px">${esc(r.error || "Can't load the demo.")}</div></main>`; return false; }
+  S.session = r.session_id; store.set("sipcare_session", r.session_id);
+  if (reset) { S.chat = []; S.lastFix = null; S.fbDone = false; store.set("sipcare_fb", "0"); S.seenObs = new Set(); }
+  apply(r); S.lastTickAt = Date.now();
+  (r.view.observations || []).forEach(o => S.seenObs.add(o.id));
+  return true;
+}
+async function tick(force) {
+  if (!S.session) return;
+  S.lastTickAt = Date.now();
+  const r = await post("/api/agent/tick", { session_id: S.session, force: !!force });
+  if (!r.ok) return;
+  const hadSheet = !!$("#sheet"), typing = document.activeElement && document.activeElement.id === "q";
+  apply(r); announce(r.fresh);
+  if (!hadSheet && !typing && screen !== "fixing" && !S.busy) render();
+}
+setInterval(() => { if (S.view && S.view.autoplay && Date.now() - S.lastTickAt >= S.nextTickMs) tick(false); }, 2000);
+window.addEventListener("hashchange", () => { const h = location.hash.replace(/^#\//, "") || "home"; if (h !== screen && S.view && (["care", "inbox", "home"].includes(h) || h.startsWith("note/"))) go(h); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.view && S.view.autoplay) tick(false); });
+
+async function send(message) {
+  if (S.busy) return;
+  if (screen !== "care") go("care");
+  S.busy = true; S.work = 0; S.chat.push({ kind: "user", text: message }); render(); scrollEnd();
+  const timer = setInterval(() => { if (S.work < 2) { S.work++; const w = document.querySelector(".work"); if (w) w.outerHTML = workBox(); } }, 700);
+  const r = await post("/api/agent/message", { session_id: S.session, message, lang: S.lang });
+  clearInterval(timer); S.busy = false;
+  if (!r.ok) { S.chat.push({ kind: "notice", text: r.error || "Something went wrong." }); render(); return; }
+  if (r.shown) { const u = [...S.chat].reverse().find(x => x.kind === "user"); if (u) u.text = r.shown; }
+  if (r.redacted && r.redacted.length) S.chat.push({ kind: "notice", text: `We removed what looked like your ${r.redacted.join(", ")}. Please don't share these.` });
+  if (r.notice) S.chat.push({ kind: "notice", text: r.notice });
+  S.chat.push({ kind: "answer", r });
+  S.pending = r.pending; S.view = r.view; render(); scrollEnd();
+}
+
+// ---------------- router ----------------
+let screen = "home", backStack = [];
+function go(s) {
+  if (s === "back") { s = backStack.pop() || "home"; } else if (s !== screen) backStack.push(screen);
+  if (s === "home") backStack = [];
+  screen = s; try { history.replaceState(null, "", s === "home" ? "#/" : "#/" + s); } catch (e) {}
+  if (s.startsWith("note/")) markRead(s.slice(5));
+  if (s === "inbox") post("/api/agent/settings", { session_id: S.session, read: "all" }).then(apply);
+  render(); window.scrollTo(0, 0); if (s === "fixing") runSteps();
+}
+function markRead(obsId) { const v = S.view; if (!v) return; const ids = v.inbox.filter(n => n.obs_id === obsId && !n.read).map(n => n.id); if (ids.length) post("/api/agent/settings", { session_id: S.session, read: ids }).then(r => { apply(r); }); }
 function loading() { return `<main><div class="hero" style="margin-top:40vh"><span class="typing"><i></i><i></i><i></i></span></div></main>`; }
 function scrollEnd() { setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 30); }
-function autoFix() {
-  const first = S.view && S.view.issues[0];
-  if (first && !S.autoFixDone) { S.autoFixDone = true; send(`__fix__:${first.sip_id}`, `Fix: ${first.title}`); }
-}
 function render() {
-  $("#app").innerHTML = screen === "care" ? care() : screen === "fixing" ? fixing() : home();
+  const s = screen;
+  $("#app").innerHTML = s === "care" ? care() : s === "fixing" ? fixing() : s === "inbox" ? inbox() : s.startsWith("note/") ? noteScreen(s.slice(5)) : home();
   wire();
 }
 function wire() {
-  const on = (sel, fn) => { const el = $(sel); if (el) el.onclick = fn; };
-  on("#fixBtn", () => go("care", { autofix: true }));
-  on("#qaCare", () => go("care"));
-  on("#back", () => go("home"));
-  on("#review", () => openConfirm(S.pending.map(p => p.id)));
-  on("#reset", async () => { await start(true); go("home"); });
-  on("#viewDid", () => { const v = S.view; const items = (v.activity || []).slice(0, 8); const w = document.createElement("div"); w.className = "sheetwrap"; w.innerHTML = `<div class="sheet"><div class="handle"></div><h3>What SIP Care did</h3><div class="steps" style="margin-top:12px">${items.map(a => `<div class="step"><span class="b">${ic("check")}</span><div style="font-size:14px">${esc(a.text)}<div class="muted">${a.auto ? "Done automatically" : "You confirmed"}</div></div></div>`).join("")}</div><button class="btn" style="margin-top:16px" id="gotIt">Got it</button></div>`; document.body.appendChild(w); w.onclick = e => { if (e.target === w || e.target.id === "gotIt") w.remove(); }; });
-  document.querySelectorAll("[data-fix]").forEach(b => b.onclick = () => { const i = S.view.issues.find(x => x.sip_id === b.dataset.fix); send(`__fix__:${b.dataset.fix}`, `Fix: ${i ? i.title : "this SIP"}`); });
+  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
+  document.querySelectorAll("[data-note]").forEach(b => b.onclick = () => go("note/" + b.dataset.note));
+  document.querySelectorAll("[data-topic]").forEach(b => b.onclick = () => send(TOPICS[+b.dataset.topic][2][S.lang] || TOPICS[+b.dataset.topic][2].en));
+  document.querySelectorAll("[data-ask]").forEach(b => b.onclick = () => send(b.dataset.ask));
+  document.querySelectorAll("[data-sit]").forEach(b => b.onclick = async () => { b.disabled = true; const r = await post("/api/agent/situation", { session_id: S.session, kind: b.dataset.sit }); apply(r); if (r.ok && r.fresh && r.fresh.length) { announce(r.fresh); window.scrollTo(0, 0); } else if (r.ok) toast({ title: "Nothing changed", notify: r.note || "That situation can't apply right now." }); render(); });
+  document.querySelectorAll("[data-act]").forEach(b => b.onclick = async () => {
+    const a = b.dataset.act;
+    if (a === "reset") { await start(true); go("home"); }
+    if (a === "toggle") { apply(await post("/api/agent/settings", { session_id: S.session, autoplay: !S.view.autoplay })); S.lastTickAt = Date.now(); render(); }
+    if (a === "alerts") enableAlerts();
+    if (a === "topics") { S.chat = []; render(); window.scrollTo(0, 0); }
+  });
   document.querySelectorAll("[data-chip]").forEach(b => b.onclick = () => send(b.dataset.chip));
-  document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => { S.lang = b.dataset.lang; store.set("sipcare_lang", S.lang); render(); });
+  document.querySelectorAll("[data-lang]").forEach(b => b.onclick = async () => { S.lang = b.dataset.lang; store.set("sipcare_lang", S.lang); apply(await post("/api/agent/settings", { session_id: S.session, lang: S.lang })); render(); });
   document.querySelectorAll("[data-confirm]").forEach(b => b.onclick = () => openConfirm([b.dataset.confirm]));
-  document.querySelectorAll("[data-decline]").forEach(b => b.onclick = async () => { const r = await post("/api/agent/decline", { session_id: S.session, proposal_id: b.dataset.decline }); if (r.ok) { S.pending = r.pending; S.thread.forEach(it => { if (it.kind === "prop" && it.p.id === b.dataset.decline) it.state = "declined"; }); render(); } });
+  document.querySelectorAll("[data-decline]").forEach(b => b.onclick = async () => { const id = b.dataset.decline; const r = await post("/api/agent/decline", { session_id: S.session, proposal_id: id }); if (r.ok) { S.pending = r.pending; if (r.view) S.view = r.view; S.chat.forEach(it => { if (it.kind === "answer") { it.states = it.states || {}; if ((it.r.proposals || []).some(p => p.id === id)) it.states[id] = "declined"; } }); render(); } });
   const f = $("#ask"); if (f) f.onsubmit = e => { e.preventDefault(); const q = $("#q").value.trim(); if (q) { $("#q").value = ""; send(q); } };
   const fb = {}; document.querySelectorAll("#fb [data-k]").forEach(b => b.onclick = () => { fb[b.dataset.k] = b.dataset.v; document.querySelectorAll(`#fb [data-k="${b.dataset.k}"]`).forEach(x => x.setAttribute("aria-pressed", x === b)); });
-  on("#fbSend", async () => { if (!fb.understood || !fb.fixed || !fb.clarity) { $("#fbMsg").textContent = "Please answer all three."; return; } const r = await post("/api/agent/feedback", Object.assign({ session_id: S.session }, fb)); if (r.ok) { S.fbDone = true; render(); } else $("#fbMsg").textContent = r.error || "Couldn't save."; });
+  const fs = $("#fbSend"); if (fs) fs.onclick = async () => { if (!fb.understood || !fb.fixed || !fb.clarity) { $("#fbMsg").textContent = "Please answer all three."; return; } const r = await post("/api/agent/feedback", Object.assign({ session_id: S.session }, fb)); if (r.ok) { S.fbDone = true; store.set("sipcare_fb", "1"); render(); } else $("#fbMsg").textContent = r.error || "Couldn't save."; };
 }
 
 (async () => {
   render();
-  if (await start(false)) { const h = location.hash.replace("#/", ""); go(h === "care" ? "care" : "home"); }
+  if ("serviceWorker" in navigator && store.get("sipcare_push") === "1") navigator.serviceWorker.register("/sw.js").catch(() => {});
+  if (await start(false)) { const h = location.hash.replace(/^#\//, ""); screen = ["care", "inbox"].includes(h) || h.startsWith("note/") ? h : "home"; render(); }
 })();
 </script>
+
 </body>
 </html>

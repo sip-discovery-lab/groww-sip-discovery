@@ -1,7 +1,7 @@
 // Builds dist/worker.js: one self-contained Cloudflare Worker file.
 import fs from "node:fs";
 const read = f => fs.readFileSync(new URL(f, import.meta.url), "utf8");
-const parts = ["src/facts.js", "src/prompt.js", "src/guard.js", "src/core.js", "src/care.js", "src/agent.js"].map(read);
+const parts = ["src/facts.js", "src/prompt.js", "src/guard.js", "src/core.js", "src/care.js", "src/agent.js", "src/events.js"].map(read);
 const cases = JSON.parse(read("eval/cases.json"));
 const page = read("src/page.html");
 const careCases = JSON.parse(read("eval/care_cases.json"));

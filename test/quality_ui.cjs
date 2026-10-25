@@ -6,5 +6,5 @@ await p.click("#run"); await p.waitForFunction(() => /Done:/.test(document.query
 console.log(await p.textContent("#msg")); await p.waitForTimeout(500);
 console.log("pass pills", (await p.$$(".pill.ok")).length, "scrollW", await p.evaluate(() => document.documentElement.scrollWidth));
 await p.screenshot({ path: "/home/claude/mvp/shots/quality.png", fullPage: false });
-const r = await p.evaluate(async () => (await fetch("/api/care/diagnose?lang=hinglish")).json()); console.log(r.used_ai, r.found, r.fix.map(f => f.title));
+const r = await p.evaluate(async () => (await fetch("/api/agent/start", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ lang: "hinglish" }) })).json()); const m = await p.evaluate(async sid => (await fetch("/api/agent/message", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ session_id: sid, message: "Mera paisa kab badhega?", lang: "hinglish" }) })).json(), r.session_id); console.log("AI after gate:", m.used_ai, "|", m.answer);
 console.log("errors", errs); await b.close(); })();

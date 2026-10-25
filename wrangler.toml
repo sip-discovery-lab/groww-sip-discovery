@@ -10,3 +10,6 @@ MODEL = "gemini-3.5-flash-lite"
 binding = "DB"
 database_name = "sip-recovery"
 database_id = "42364513-60ae-45b7-91ac-8359b999d2f3"
+
+[triggers]
+crons = ["* * * * *"]

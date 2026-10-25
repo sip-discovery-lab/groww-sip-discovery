@@ -41,26 +41,34 @@ Where it would sit in Groww: the failed-debit notification, a "Something went wr
 
 ## SIP Care agent (the MVP)
 
-Open the app at `/`. It is a Groww-style concept app with a demo user (Riya) and 3 SIPs, each with a real-world problem from the research: a failed instalment (salary after SIP date), money debited but units pending, and AutoPay not approved.
+Open the app at `/`. It is a Groww-style concept app with a demo user (Riya) and 3 SIPs on the 26th of every month. **At launch everything is normal**: no errors, all SIPs active, the last invested date is the most recent 26th (last month's 26th until this month's comes round), with invested amount, current value and gain per SIP.
 
-**SIP Care is an AI agent.** It reads the user's SIPs and message (any SIP problem, in English, Hinglish or Hindi), decides what's wrong and what to do, and:
-- **acts on its own** only for safe steps: tracking an order, setting a reminder, drafting a support message;
-- **asks the user to confirm** anything that moves money or changes a SIP: pay now, retry on payday, change date or amount, skip, pause, resume, new AutoPay request, send a ticket, stop;
-- **never** recommends funds, predicts returns, sells units, or asks for PAN/OTP/account numbers.
+**The user decides what to check.** SIP Care offers topics (payment failed, not showing in app, stop or close a SIP, when will it grow, withdraw money, tax and exit load, change date or amount, skip or pause, AutoPay, is my money safe) and a free-text box for any SIP question, in English, Hinglish or Hindi.
 
-The confirm rule is enforced by the server, not just the prompt: confirm-type actions can only run through `/api/agent/confirm`. Every action is validated (e.g. retry only on a failed instalment, amount at least the fund minimum).
+**How it answers (agent loop per question):**
+1. **Reads the account:** statuses, instalment history, invested vs current value, units, NAV, exit load, orders in progress, AutoPay, withdrawals.
+2. **Checks SIP rules and platform guidelines:** a built-in guideline base (cut-off and NAV, unit allotment time, refunds, auto-cancellation after 3 failed instalments, stop processing time, redemption timelines, exit load, capital gains tax, AutoPay) plus, when AI is on, a background web check of current rules (cached for a week). Where a rule came from is never shown: links, site, company and regulator names are removed from notes, and any answer that mentions a source is blocked.
+3. **Answers with evidence:** "What I found in your account", the answer, "What happens next", follow-up questions.
+4. **Acts:** safe steps run by themselves (track an order, set a reminder, draft a support message). Anything that moves money or changes a SIP (withdraw, pay a missed instalment, stop, change date or amount, skip, pause, restart, new AutoPay request, send a ticket) is **proposed and waits for Confirm**, with the details (amount, exit load, bank, timeline) on the confirm sheet.
+5. **Follows up in the background:** the agent keeps checking (in the open app and via Cloudflare Cron with the app closed) and notifies the user when units are added, a withdrawal is credited, a stop is processed or AutoPay is active again (in-app, inbox, and Web Push). Demo time is accelerated: things that take 1-2 working days finish in about a minute.
+
+**For testers:** a "try a situation" panel switches on a payment failure, money debited but units not showing, or AutoPay expiring, so the agent's notice → question → fix flow can be tested on demand.
+
+**Safety rules (checked on every AI answer):** no fund recommendations or comparisons, no return predictions, only numbers from the account, the guidelines or the user's message, no fee waivers, no fear or urgency words, no requests for personal data (PAN, account numbers, OTP are stripped before the AI sees them), no mention of sources. If any rule breaks, or AI is off, down or over the free limit, SIP Care uses its rule-based answer and labels it "Standard".
 
 | Route | What it does |
 |---|---|
-| `POST /api/agent/start` | Start or resume a demo session (`reset: true` for a fresh one) |
-| `POST /api/agent/message` | Agent turn: reply, actions done automatically, proposals needing confirmation |
-| `POST /api/agent/confirm` | Run the proposals the user confirmed; returns the steps and the Home message |
-| `POST /api/agent/decline` | User says "Not now" to a proposal |
-| `POST /api/agent/feedback` | 3 tester questions (understood, fixed, clarity) |
-| `GET /api/agent/stats` | Sessions, fix rate, median time to fix, AI vs standard answers, tester answers |
-| `GET /quality` | Run the 30-case agent quality gate and see every case |
+| `POST /api/agent/start` | Start or resume a demo session (`reset: true` for a fresh account) |
+| `POST /api/agent/message` | Ask SIP Care any SIP question; returns found / answer / next / follow-ups, auto steps and proposals |
+| `POST /api/agent/confirm` / `decline` | User confirms or declines proposals |
+| `POST /api/agent/tick` | Background check (auto-paced) |
+| `POST /api/agent/situation` | Testers: switch on a demo situation |
+| `POST /api/agent/settings` | Pause/resume background checks, language, mark notifications read |
+| `GET /api/agent/push-key`, `POST /api/agent/push-subscribe`, `GET /api/agent/latest` | Web Push alerts (VAPID keys generated and kept in D1; pushes carry no data) |
+| `POST /api/agent/feedback`, `GET /api/agent/stats` | Tester answers and usage stats |
+| `GET /quality` | Run the 30-question agent quality gate (`agent-v3`) |
 
-AI answers are used only after the agent passes its gate (at least 90% of 30 cases, zero rule breaks). If the gate isn't passed, the AI is down, over the free limit, or an AI answer breaks a safety rule, SIP Care uses its rule-based agent instead, and the app labels the answer "Standard".
+AI answers are used only after the agent passes its gate: at least 90% of 30 cases and zero rule breaks, per model and version.
 
 ## Earlier SIP Care diagnosis API
 

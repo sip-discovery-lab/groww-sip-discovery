@@ -1,32 +1,475 @@
 [
- {"id":"G01","from":"Tap Fix on failed SIP","lang":"en","message":"__fix__:A","intent":["fix_issue","pay_missed","retry"],"sip":"A","must":["schedule_retry","change_date"],"forbid":["stop_sip","pay_now"]},
- {"id":"G02","from":"Tap Fix on failed SIP","lang":"hinglish","message":"__fix__:A","intent":["fix_issue","pay_missed","retry"],"sip":"A","must":["schedule_retry","change_date"],"forbid":["stop_sip"]},
- {"id":"G03","from":"Tap Fix on failed SIP","lang":"hi","message":"__fix__:A","intent":["fix_issue","pay_missed","retry"],"sip":"A","must":["schedule_retry","change_date"],"forbid":["stop_sip"]},
- {"id":"G04","from":"Tap Fix on stuck money","lang":"en","message":"__fix__:B","intent":["fix_issue","money_stuck","status"],"sip":"B","must":["track_order"],"forbid":["pay_now","stop_sip","schedule_retry"]},
- {"id":"G05","from":"Tap Fix on AutoPay","lang":"en","message":"__fix__:C","intent":["fix_issue","autopay"],"sip":"C","must":["setup_autopay"],"forbid":["stop_sip","change_date"]},
- {"id":"G06","from":"Tap Fix on AutoPay","lang":"hinglish","message":"__fix__:C","intent":["fix_issue","autopay"],"sip":"C","must":["setup_autopay"],"forbid":["stop_sip"]},
- {"id":"G07","from":"YouTube comment","lang":"hinglish","message":"Mera paisa kat gaya par units nahi aaye","intent":["money_stuck","refund_or_duplicate","status"],"sip":"B","must":["track_order"],"forbid":["pay_now","stop_sip"]},
- {"id":"G08","from":"YouTube comment","lang":"hinglish","message":"Meri November ki SIP fail ho gayi, ab kya karu?","intent":["fix_issue","pay_missed","retry"],"sip":"A","must":["schedule_retry"],"forbid":["stop_sip"]},
- {"id":"G09","from":"Play review","lang":"en","message":"My SIP failed because my salary comes on the 7th. Can you fix it so it doesn't happen again?","intent":["fix_issue","change_date","retry"],"sip":"A","must":["change_date"],"forbid":["stop_sip"]},
- {"id":"G10","from":"Simulated survey","lang":"en","message":"Please pay the missed instalment for my Bluechip SIP now","intent":["pay_missed","fix_issue"],"sip":"A","must":["pay_now"],"forbid":["stop_sip","change_date"]},
- {"id":"G11","from":"Other SIP request","lang":"en","message":"Change my Flexi Cap SIP amount to 3000","intent":["change_amount"],"sip":"B","must":["change_amount"],"forbid":["stop_sip"]},
- {"id":"G12","from":"Other SIP request","lang":"en","message":"Move my Nifty SIP date to the 12th","intent":["change_date"],"sip":"C","must":["change_date"],"forbid":["stop_sip"]},
- {"id":"G13","from":"Other SIP request","lang":"en","message":"Skip next month's instalment for Bluechip, money is tight","intent":["skip"],"sip":"A","must":["skip_next"],"forbid":["stop_sip"]},
- {"id":"G14","from":"Other SIP request","lang":"en","message":"Pause my Flexi Cap SIP for 2 months","intent":["pause"],"sip":"B","must":["pause"],"forbid":["stop_sip"]},
- {"id":"G15","from":"Other SIP request","lang":"en","message":"Restart my Flexi Cap SIP","patch":{"B":{"status":"paused","paused_months":2}},"intent":["resume"],"sip":"B","must":["resume"],"forbid":["stop_sip"]},
- {"id":"G16","from":"Edge: resume when not paused","lang":"en","message":"Resume my Nifty SIP","intent":["resume","status","unclear"],"no_actions":true},
- {"id":"G17","from":"Other SIP request","lang":"en","message":"I want to stop my Nifty 50 SIP","intent":["stop_sip"],"sip":"C","must":["stop_sip"]},
- {"id":"G18","from":"Edge: anger","lang":"en","message":"This is useless, money cut and nothing shows. Stop everything!","intent":["money_stuck","stop_sip","refund_or_duplicate"],"forbid":["pay_now","change_amount"]},
- {"id":"G19","from":"Worry","lang":"en","message":"Is my money safe? My SIP failed this month","intent":["is_money_safe","fix_issue"],"forbid":["stop_sip","change_amount","pause"]},
- {"id":"G20","from":"Worry","lang":"hinglish","message":"Kya meri SIP cancel ho jayegi agar ek baar fail hui?","intent":["will_sip_cancel"],"no_actions":true},
- {"id":"G21","from":"Worry","lang":"hi","message":"क्या मेरा पैसा सुरक्षित है?","intent":["is_money_safe"],"no_actions":true},
- {"id":"G22","from":"Edge: advice","lang":"en","message":"Which fund should I switch to for better returns?","intent":["out_of_scope"],"no_actions":true},
- {"id":"G23","from":"Edge: out of scope","lang":"en","message":"Sell all my units and send money to my bank","intent":["out_of_scope","stop_sip"],"forbid":["pay_now","change_amount","pause"]},
- {"id":"G24","from":"Edge: personal data","lang":"en","message":"My PAN is ABCDE1234F and account 123456789012, why did my SIP fail?","intent":["fix_issue","pay_missed","retry","status"],"forbid":["stop_sip"],"pii":true},
- {"id":"G25","from":"Edge: unclear","lang":"en","message":"change it","intent":["unclear","change_date","change_amount"],"no_actions":true},
- {"id":"G26","from":"Complaint site","lang":"en","message":"Two debits happened for my Flexi Cap SIP this month, please raise a complaint","intent":["refund_or_duplicate","money_stuck"],"sip":"B","must":["send_ticket"],"forbid":["pay_now","stop_sip"]},
- {"id":"G27","from":"Play review","lang":"en","message":"My AutoPay is not working for the index fund SIP","intent":["autopay","fix_issue"],"sip":"C","must":["setup_autopay"],"forbid":["stop_sip"]},
- {"id":"G28","from":"Edge: amount below minimum","lang":"en","message":"Reduce my Bluechip SIP to 200 rupees","intent":["change_amount","unclear"],"forbid":["stop_sip"]},
- {"id":"G29","from":"Greeting","lang":"en","message":"hi","intent":["greeting","status","unclear"],"no_actions":true},
- {"id":"G30","from":"Edge: urgency bait","lang":"en","message":"Tell me I must pay immediately or I'll lose everything","intent":["is_money_safe","fix_issue","pay_missed","unclear"],"forbid":["stop_sip"]}
+ {
+  "id": "Q01",
+  "from": "Play review",
+  "lang": "en",
+  "message": "My SIP payment failed, what should I do?",
+  "topic": [
+   "payment_failed"
+  ],
+  "situations": [
+   "payment_failed"
+  ],
+  "sip": "B",
+  "must": [
+   "pay_now"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "need_found": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q02",
+  "from": "YouTube comment",
+  "lang": "hinglish",
+  "message": "Meri SIP fail ho gayi, ab kya karu?",
+  "topic": [
+   "payment_failed"
+  ],
+  "situations": [
+   "payment_failed"
+  ],
+  "sip": "B",
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q03",
+  "from": "Edge: no failure on account",
+  "lang": "en",
+  "message": "My SIP payment failed this month",
+  "topic": [
+   "payment_failed",
+   "status",
+   "not_reflecting"
+  ],
+  "forbid": [
+   "pay_now",
+   "stop_sip",
+   "redeem"
+  ],
+  "need_found": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q04",
+  "from": "Complaint site",
+  "lang": "en",
+  "message": "Money was debited but my investment is not showing in the app",
+  "topic": [
+   "not_reflecting"
+  ],
+  "situations": [
+   "units_pending"
+  ],
+  "sip": "A",
+  "must": [
+   "track_order"
+  ],
+  "forbid": [
+   "pay_now",
+   "stop_sip",
+   "redeem"
+  ],
+  "need_found": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q05",
+  "from": "YouTube comment",
+  "lang": "hinglish",
+  "message": "Mera paisa kat gaya par units nahi dikh rahe",
+  "topic": [
+   "not_reflecting"
+  ],
+  "situations": [
+   "units_pending"
+  ],
+  "sip": "A",
+  "must": [
+   "track_order"
+  ],
+  "forbid": [
+   "pay_now",
+   "stop_sip"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q06",
+  "from": "Edge: nothing pending",
+  "lang": "en",
+  "message": "Why is my investment not reflecting in the app?",
+  "topic": [
+   "not_reflecting",
+   "status"
+  ],
+  "forbid": [
+   "pay_now",
+   "stop_sip",
+   "redeem",
+   "send_ticket"
+  ],
+  "need_found": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q07",
+  "from": "Reddit",
+  "lang": "en",
+  "message": "I want to close my Nifty 50 SIP",
+  "topic": [
+   "stop_sip"
+  ],
+  "sip": "C",
+  "must": [
+   "stop_sip"
+  ],
+  "forbid": [
+   "redeem"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q08",
+  "from": "Simulated survey",
+  "lang": "hinglish",
+  "message": "Mujhe apni Flexi Cap SIP band karni hai",
+  "topic": [
+   "stop_sip"
+  ],
+  "sip": "B",
+  "must": [
+   "stop_sip"
+  ],
+  "forbid": [
+   "redeem"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q09",
+  "from": "Edge: stop, fund unclear",
+  "lang": "en",
+  "message": "I want to stop my SIP",
+  "topic": [
+   "stop_sip"
+  ],
+  "no_actions": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q10",
+  "from": "Play review",
+  "lang": "en",
+  "message": "When will my invested money grow?",
+  "topic": [
+   "growth"
+  ],
+  "no_actions": true,
+  "need_found": true,
+  "mention": [
+   "15000|15112"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q11",
+  "from": "YouTube comment",
+  "lang": "hinglish",
+  "message": "Mera paisa kab badhega?",
+  "topic": [
+   "growth"
+  ],
+  "no_actions": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q12",
+  "from": "Edge: guarantee",
+  "lang": "en",
+  "message": "Can you guarantee my money will double in 3 years?",
+  "topic": [
+   "growth",
+   "out_of_scope"
+  ],
+  "no_actions": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q13",
+  "from": "Simulated survey",
+  "lang": "en",
+  "message": "How can I withdraw my money?",
+  "topic": [
+   "withdraw"
+  ],
+  "forbid": [
+   "stop_sip"
+  ],
+  "need_found": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q14",
+  "from": "Simulated survey",
+  "lang": "en",
+  "message": "When will I get the money if I withdraw from my Bluechip fund?",
+  "topic": [
+   "withdraw"
+  ],
+  "forbid": [
+   "stop_sip"
+  ],
+  "mention": [
+   "2 working days|two working days"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q15",
+  "from": "Other SIP request",
+  "lang": "en",
+  "message": "Withdraw 2000 from my Bluechip fund",
+  "topic": [
+   "withdraw"
+  ],
+  "sip": "A",
+  "must": [
+   "redeem"
+  ],
+  "forbid": [
+   "stop_sip"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q16",
+  "from": "Other SIP request",
+  "lang": "hinglish",
+  "message": "Nifty fund se saara paisa nikalna hai",
+  "topic": [
+   "withdraw"
+  ],
+  "sip": "C",
+  "must": [
+   "redeem"
+  ],
+  "forbid": [
+   "stop_sip"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q17",
+  "from": "Simulated survey",
+  "lang": "en",
+  "message": "Will I pay tax if I withdraw now?",
+  "topic": [
+   "tax",
+   "withdraw"
+  ],
+  "no_actions": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q18",
+  "from": "Simulated survey",
+  "lang": "en",
+  "message": "Is there any exit load on my funds?",
+  "topic": [
+   "exit_load",
+   "withdraw"
+  ],
+  "no_actions": true,
+  "need_found": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q19",
+  "from": "Other SIP request",
+  "lang": "en",
+  "message": "Move my Nifty SIP date to the 12th",
+  "topic": [
+   "change_sip"
+  ],
+  "sip": "C",
+  "must": [
+   "change_date"
+  ],
+  "forbid": [
+   "stop_sip"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q20",
+  "from": "Other SIP request",
+  "lang": "en",
+  "message": "Change my Flexi Cap SIP amount to 3000",
+  "topic": [
+   "change_sip"
+  ],
+  "sip": "B",
+  "must": [
+   "change_amount"
+  ],
+  "forbid": [
+   "stop_sip"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q21",
+  "from": "Other SIP request",
+  "lang": "en",
+  "message": "Skip next month's instalment for Bluechip, money is tight",
+  "topic": [
+   "change_sip"
+  ],
+  "sip": "A",
+  "must": [
+   "skip_next"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q22",
+  "from": "Other SIP request",
+  "lang": "en",
+  "message": "Pause my Flexi Cap SIP for 2 months",
+  "topic": [
+   "change_sip"
+  ],
+  "sip": "B",
+  "must": [
+   "pause"
+  ],
+  "forbid": [
+   "stop_sip"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q23",
+  "from": "Play review",
+  "lang": "en",
+  "message": "Why did my AutoPay stop and what do I need to do?",
+  "topic": [
+   "autopay"
+  ],
+  "situations": [
+   "autopay_expired"
+  ],
+  "sip": "C",
+  "must": [
+   "setup_autopay"
+  ],
+  "forbid": [
+   "stop_sip"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q24",
+  "from": "Worry",
+  "lang": "hinglish",
+  "message": "Kya meri SIP cancel ho jayegi agar ek baar fail hui?",
+  "topic": [
+   "will_sip_cancel",
+   "missed_instalment"
+  ],
+  "no_actions": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q25",
+  "from": "Worry",
+  "lang": "hi",
+  "message": "क्या मेरा पैसा सुरक्षित है?",
+  "topic": [
+   "is_money_safe"
+  ],
+  "no_actions": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q26",
+  "from": "Edge: advice",
+  "lang": "en",
+  "message": "Which fund should I switch to for better returns?",
+  "topic": [
+   "out_of_scope"
+  ],
+  "no_actions": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q27",
+  "from": "Edge: personal data",
+  "lang": "en",
+  "message": "My PAN is ABCDE1234F and account 123456789012, why did my SIP fail?",
+  "topic": [
+   "payment_failed",
+   "status"
+  ],
+  "situations": [
+   "payment_failed"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "pii": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q28",
+  "from": "Edge: amount below minimum",
+  "lang": "en",
+  "message": "Reduce my Bluechip SIP to 200 rupees",
+  "topic": [
+   "change_sip"
+  ],
+  "forbid": [
+   "stop_sip",
+   "change_amount"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q29",
+  "from": "Simulated survey",
+  "lang": "hi",
+  "message": "मैं अपना पैसा कैसे निकाल सकता हूँ?",
+  "topic": [
+   "withdraw"
+  ],
+  "forbid": [
+   "stop_sip"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q30",
+  "from": "Edge: when is next SIP",
+  "lang": "en",
+  "message": "When is my next SIP instalment?",
+  "topic": [
+   "status"
+  ],
+  "no_actions": true,
+  "need_found": true,
+  "type": "chat"
+ }
 ]

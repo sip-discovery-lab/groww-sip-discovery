@@ -21,8 +21,8 @@ const careMock = async ({ state, lang }) => {
   const f = { en: ["Your salary comes on the 7th but the SIP runs on the 3rd, so the balance was short.", "Retry set for 7 Nov. Your SIP is active."], hinglish: ["Aapki salary 7 ko aati hai par SIP 3 ko hai, isliye balance kam tha.", "7 Nov ko retry set hai. Aapka SIP active hai."], hi: ["आपकी सैलरी 7 तारीख को आती है, पर SIP 3 तारीख को कटता है।", "7 Nov को फिर से कोशिश होगी। आपका SIP चालू है।"] }[L];
   return { cause: c ? c.expect_cause : "salary_after_sip_date", plan, found: f[0], home_message: f[1], notes: [] };
 };
-const rules = new Function(fs.readFileSync(new URL("../src/guard.js", import.meta.url), "utf8") + fs.readFileSync(new URL("../src/agent.js", import.meta.url), "utf8") + "; return agentRules;")();
-const env = { DB: makeD1(), GEMINI_MOCK: mock, GEMINI_CARE_MOCK: careMock, GEMINI_AGENT_MOCK: makeAgentMock(rules, MODE) };
+const lib = new Function(["guard", "facts", "core", "agent", "events"].map(f => fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), "utf8")).join("\n") + "; return { agentRules };")();
+const env = { DB: makeD1(), GEMINI_MOCK: mock, GEMINI_CARE_MOCK: careMock, GEMINI_AGENT_MOCK: makeAgentMock(lib.agentRules, MODE), GEMINI_OBS_MOCK: null, TICK_FORCE_MS: Number(process.env.TICK_FORCE_MS ?? 300) };
 const port = +(process.env.PORT || 8788);
 http.createServer(async (req, res) => {
   let body = ""; req.on("data", c => body += c); await new Promise(r => req.on("end", r));

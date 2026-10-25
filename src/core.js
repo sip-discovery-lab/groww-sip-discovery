@@ -22,8 +22,9 @@ async function callGemini(env, input, task) {
   const body = {
     systemInstruction: { parts: [{ text: task.system }] },
     contents: [{ role: "user", parts: [{ text: task.user }] }],
-    generationConfig: { responseMimeType: "application/json", responseSchema: task.schema, temperature: 0.2, maxOutputTokens: 1200 },
+    generationConfig: task.plain ? { temperature: 0.1, maxOutputTokens: 900 } : { responseMimeType: "application/json", responseSchema: task.schema, temperature: 0.2, maxOutputTokens: 1200 },
   };
+  if (task.tools) body.tools = task.tools;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   let last = "";
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -33,6 +34,7 @@ async function callGemini(env, input, task) {
       let j; try { j = JSON.parse(t); } catch (e) { throw new Error("Gemini sent a reply that is not JSON"); }
       const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
       const text = parts.map(p => p.text || "").join("");
+      if (task.plain) return text;
       if (!text) throw new Error("Gemini sent an empty answer" + (j.promptFeedback ? ` (${JSON.stringify(j.promptFeedback).slice(0, 120)})` : ""));
       try { return JSON.parse(text); } catch (e) { const m = text.match(/\{[\s\S]*\}/); if (m) return JSON.parse(m[0]); throw new Error("Gemini answer was not valid JSON"); }
     }
