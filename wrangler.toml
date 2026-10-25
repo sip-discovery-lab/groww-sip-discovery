@@ -1,7 +1,9 @@
-name = "groww-sip-recovery-helper"
+name = "groww-sip-discovery"
 main = "dist/worker.js"
 compatibility_date = "2026-10-01"
 workers_dev = true
+# Keep variables set in the Cloudflare dashboard when GitHub deploys (the Gemini key is a Secret set only in Cloudflare).
+keep_vars = true
 
 [vars]
 MODEL = "gemini-3.5-flash-lite"
