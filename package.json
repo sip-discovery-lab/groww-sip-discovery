@@ -1,0 +1,11 @@
+{
+  "name": "groww-sip-recovery-helper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && node test/guard.mjs && node test/run.mjs",
+    "dev": "node build.mjs && node test/server.mjs",
+    "deploy": "node build.mjs && npx wrangler deploy"
+  }
+}

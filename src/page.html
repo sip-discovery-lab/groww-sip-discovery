@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SIP Recovery Helper · Concept for Groww</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16202c;--muted:#5a6675;--line:#dfe3e8;--blue:#00875f;--blue-bg:#e3f6ef;--orange:#b35a00;--orange-bg:#fdf1e4;--ok:#00875f;--on-brand:#fff;--bad:#b35a00;--r:12px}
+@media (prefers-color-scheme:dark){:root{--bg:#11161d;--card:#1a212b;--ink:#e8edf3;--muted:#9aa6b4;--line:#2c3542;--blue:#3ddcab;--blue-bg:#13302a;--orange:#f0a35a;--orange-bg:#35261a;--on-brand:#06231b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+header h1{font-size:22px;margin:4px 0 2px}
+.for{display:inline-block;font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-bg);border-radius:999px;padding:2px 10px;margin-bottom:4px}
+.where li{margin:6px 0}
+.tag{font-size:13px;color:var(--muted)}
+.banner{background:var(--orange-bg);border:1px solid var(--orange);color:var(--ink);border-radius:var(--r);padding:10px 12px;font-size:14px;margin:12px 0}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+nav button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-size:14px;cursor:pointer}
+nav button[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:var(--on-brand)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:12px 0}
+h2{font-size:18px;margin:0 0 8px}
+h3{font-size:15px;margin:14px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;cursor:pointer;text-align:left}
+.chip[aria-pressed=true]{border-color:var(--blue);background:var(--blue-bg);box-shadow:inset 0 0 0 1px var(--blue)}
+textarea,input,select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}
+textarea{min-height:90px;resize:vertical}
+label{font-size:14px;color:var(--muted);display:block;margin:10px 0 4px}
+.row{display:flex;gap:12px}.row>div{flex:1}
+.btn{background:var(--blue);color:var(--on-brand);border:0;border-radius:10px;padding:12px 18px;font:inherit;font-weight:600;cursor:pointer;margin-top:12px}
+.btn.secondary{background:transparent;color:var(--blue);border:1px solid var(--blue)}
+.btn:disabled{opacity:.55;cursor:default}
+.muted{color:var(--muted);font-size:14px}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600}
+.pill.ok{background:var(--blue-bg);color:var(--blue)}.pill.bad{background:var(--orange-bg);color:var(--orange)}
+.sit{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--blue);font-weight:700}
+.summary{font-size:18px;margin:6px 0}
+.money{background:var(--blue-bg);border-radius:10px;padding:10px 12px;margin:10px 0}
+.money p{margin:4px 0}
+.opt{border:1px solid var(--line);border-radius:10px;margin:8px 0}
+.opt summary{padding:12px;cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:8px}
+.opt summary::-webkit-details-marker{display:none}
+.opt .body{padding:0 12px 12px}
+.opt ol{margin:6px 0;padding-left:20px}
+.note{border-left:3px solid var(--blue);padding-left:10px;margin:8px 0;font-size:15px}
+.src{font-size:13px;color:var(--muted)}
+.src a{color:var(--blue)}
+.notice{background:var(--orange-bg);border-radius:10px;padding:8px 12px;font-size:14px;margin:8px 0}
+.copybox{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px;font-size:15px;white-space:pre-wrap}
+table{width:100%;border-collapse:collapse;font-size:14px}
+#caseTable table{min-width:680px}
+th,td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.tablewrap{overflow-x:auto}
+.stat{display:inline-block;margin:0 18px 8px 0}.stat b{display:block;font-size:22px}
+.scen{border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0}
+.hidden{display:none}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes s{to{transform:rotate(360deg)}}
+.fb .chips .chip{padding:7px 10px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="for">Concept for Groww</span>
+  <h1>SIP Recovery Helper</h1>
+  <div class="tag">For first-time Groww SIP investors when an instalment fails, gets stuck, or may fail soon.</div>
+</header>
+<div class="banner"><b>Concept prototype for Groww, made for a product case study.</b> Not an official Groww product and not made by Groww. Not investment advice. Do not type your PAN, bank account number, OTP, PIN or screenshots.</div>
+
+<nav role="tablist">
+  <button role="tab" data-tab="help" aria-selected="true">Get help</button>
+  <button role="tab" data-tab="test" aria-selected="false">Try a scenario</button>
+  <button role="tab" data-tab="quality" aria-selected="false">Quality check</button>
+  <button role="tab" data-tab="how" aria-selected="false">How it works</button>
+  <button role="tab" data-tab="results" aria-selected="false">Results</button>
+</nav>
+
+<!-- HELP -->
+<section id="tab-help">
+  <div class="card" id="scenarioCard" hidden></div>
+  <div class="card" id="askCard">
+    <h2>What happened?</h2>
+    <div class="chips" id="chips"></div>
+    <label for="text">Tell it in your own words (any language, optional)</label>
+    <textarea id="text" maxlength="1000" placeholder="e.g. Paisa kat gaya par units nahi aaye / My SIP failed this month, what now?"></textarea>
+    <div class="row">
+      <div><label for="sipDay">SIP date (day of month, optional)</label><input id="sipDay" type="number" min="1" max="31" inputmode="numeric"></div>
+      <div><label for="salDay">Income usually arrives on (day, optional)</label><input id="salDay" type="number" min="1" max="31" inputmode="numeric"></div>
+    </div>
+    <button class="btn" id="go">Get help</button>
+    <div class="muted" id="gateLine" style="margin-top:8px"></div>
+  </div>
+  <div id="answer"></div>
+</section>
+
+<!-- TEST -->
+<section id="tab-test" class="hidden">
+  <div class="card">
+    <h2>Try a scenario</h2>
+    <p class="muted">For testers. Pick a situation, imagine it is happening to you, and use the helper as you would. At the end, three quick questions. Nothing you type is stored; only your choices and the time taken.</p>
+    <div id="scenList"></div>
+  </div>
+</section>
+
+<!-- QUALITY -->
+<section id="tab-quality" class="hidden">
+  <div class="card">
+    <h2>Quality check (the gate)</h2>
+    <p class="muted">The AI is tested on 25 situations written from real Groww SIP posts, plus tricky ones (asking which fund to buy, sharing a PAN, angry messages). AI answers go live only if at least <b>90%</b> are right <b>and</b> there are <b>zero</b> rule breaks. Otherwise the helper shows standard (non-AI) help.</p>
+    <div id="gateBox"></div>
+    <button class="btn secondary" id="runEval">Run the check now</button>
+    <div class="muted" id="evalMsg" style="margin-top:8px"></div>
+  </div>
+  <div class="card"><h2>Case by case</h2><div class="tablewrap" id="caseTable"><p class="muted">Loading…</p></div></div>
+  <div class="card"><h2>Past checks</h2><div class="tablewrap" id="runTable"></div></div>
+</section>
+
+<!-- HOW -->
+<section id="tab-how" class="hidden">
+  <div class="card">
+    <h2>How it works</h2>
+    <ol>
+      <li><b>You say what happened</b> by tapping a choice and/or typing in any language.</li>
+      <li><b>Personal data is removed first.</b> PAN, account numbers, UPI IDs, OTPs and similar are stripped before anything is sent to the AI or saved.</li>
+      <li><b>The AI (Google Gemini, free tier)</b> works out which of 4 situations it is, puts the options in the order that fits your case, and writes a short plain summary in your language.</li>
+      <li><b>Facts and steps are fixed text</b> from public sources (below). The AI cannot change them.</li>
+      <li><b>Every AI sentence is checked</b> for fund names, advice, return predictions, fear or urgency words, and requests for personal data. Anything that fails is removed.</li>
+      <li><b>You choose.</b> Nothing happens to your SIP from here; every option tells you where to do it in the app. Stopping is always shown as a neutral option.</li>
+    </ol>
+    <h3>Where this would sit in Groww</h3>
+    <ul class="where">
+      <li><b>Failed-debit alert:</b> when an instalment fails, the notification opens this helper with the situation already filled in.</li>
+      <li><b>My SIPs:</b> a "Something went wrong with this instalment?" link on each SIP.</li>
+      <li><b>3 days before the SIP date:</b> if the person has said money is tight, a gentle "need to change this month?" entry point.</li>
+    </ul>
+    <p class="muted">In this prototype you open it directly and describe the situation yourself, because it has no access to real Groww accounts.</p>
+    <h3>What it will never do</h3>
+    <p class="muted">Recommend or name funds, predict returns, push you with fear or urgency, or ask for PAN, account numbers or screenshots.</p>
+    <h3>Facts used and their sources</h3>
+    <div id="factList" class="muted">Loading…</div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section id="tab-results" class="hidden">
+  <div class="card"><h2>Results so far</h2><div id="resBox"><p class="muted">Loading…</p></div></div>
+</section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const api = async (path, body) => {
+  const r = await fetch(path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {});
+  let j; try { j = await r.json(); } catch (e) { j = { ok: false, error: `HTTP ${r.status}` }; }
+  if (!r.ok && j.ok !== false) j.ok = false;
+  return j;
+};
+
+const CHIPS = [
+  ["money_stuck", "Money left my bank, but no units yet"],
+  ["instalment_failed", "My instalment failed"],
+  ["autopay_problem", "AutoPay is not working"],
+  ["low_balance_ahead", "My balance may be short before the SIP date"],
+];
+let chip = null, session = null, started = Date.now(), scenario = null;
+
+$("#chips").innerHTML = CHIPS.map(([id, t]) => `<button class="chip" aria-pressed="false" data-chip="${id}">${esc(t)}</button>`).join("");
+$("#chips").addEventListener("click", e => {
+  const b = e.target.closest("[data-chip]"); if (!b) return;
+  chip = chip === b.dataset.chip ? null : b.dataset.chip;
+  document.querySelectorAll("[data-chip]").forEach(x => x.setAttribute("aria-pressed", x.dataset.chip === chip));
+});
+
+// Tabs
+document.querySelectorAll("nav [data-tab]").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+function showTab(t) {
+  document.querySelectorAll("nav [data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
+  document.querySelectorAll("section[id^=tab-]").forEach(s => s.classList.toggle("hidden", s.id !== "tab-" + t));
+  if (t === "quality") loadEval();
+  if (t === "how") loadFacts();
+  if (t === "results") loadResults();
+  try { history.replaceState(null, "", "#" + t); } catch (e) {}
+}
+
+async function loadGateLine() {
+  const g = await api("/api/gate");
+  if (!g.ok) { $("#gateLine").textContent = "Could not reach the server: " + (g.error || ""); return; }
+  const gt = g.gate;
+  $("#gateLine").innerHTML = gt.passed
+    ? `<span class="pill ok">AI on</span> passed its quality check (${Math.round(gt.last.score * 100)}%, ${gt.last.breaks} rule breaks)`
+    : `<span class="pill bad">AI off</span> quality check not passed yet, so you get standard help`;
+}
+
+$("#go").addEventListener("click", async () => {
+  const text = $("#text").value.trim();
+  if (!chip && !text) { $("#answer").innerHTML = `<div class="notice">Tap what happened or type a few words.</div>`; return; }
+  const btn = $("#go"); btn.disabled = true; btn.innerHTML = `<span class="spin"></span>Working it out…`;
+  const a = await api("/api/help", { chip, text, sip_day: $("#sipDay").value, salary_day: $("#salDay").value, tester: !!scenario, scenario: scenario && scenario.id });
+  btn.disabled = false; btn.textContent = "Get help";
+  if (!a || a.ok === false) { $("#answer").innerHTML = `<div class="card notice">Something went wrong: ${esc(a && a.error)}</div>`; return; }
+  session = a.session_id; renderAnswer(a);
+  $("#answer").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+function srcLink(f) { return f.source ? `<span class="src">Source: <a href="${esc(f.source.url)}" target="_blank" rel="noopener">${esc(f.source.title)}</a></span>` : ""; }
+
+function renderAnswer(a) {
+  const opts = a.options || [];
+  let h = `<div class="card">`;
+  if (a.notice) h += `<div class="notice">${esc(a.notice)}</div>`;
+  if (a.redacted && a.redacted.length) h += `<div class="notice">We removed what looked like your ${esc(a.redacted.join(", "))} before doing anything. Please don't share these here or in support chats.</div>`;
+  h += `<div class="sit">${esc(a.label)} ${a.used_ai ? '<span class="pill ok">AI</span>' : '<span class="pill bad">Standard help</span>'}</div>`;
+  if (a.summary) h += `<p class="summary">${esc(a.summary)}</p>`;
+  if (a.worry_answer) h += `<div class="note">${esc(a.worry_answer)}</div>`;
+  if (a.question) h += `<p><b>${esc(a.question)}</b></p>`;
+  if ((a.money_now || []).length) h += `<div class="money"><b>Your money right now</b>${a.money_now.map(f => `<p>${esc(f.text)}<br>${srcLink(f)}</p>`).join("")}</div>`;
+  if (opts.length) {
+    h += `<h3>Your options (you choose)</h3>`;
+    h += opts.map((o, i) => `<details class="opt" ${i === 0 ? "open" : ""}><summary><span>${i + 1}. ${esc(o.title)}</span><span class="muted">${o.neutral ? "also possible" : ""}</span></summary><div class="body">
+      ${o.note ? `<div class="note">${esc(o.note)}</div>` : ""}
+      <ol>${o.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
+      ${o.facts.map(f => `<p class="muted">${esc(f.text)}<br>${srcLink(f)}</p>`).join("")}
+      ${o.id === "contact_support" && a.support_message ? `<div class="copybox" id="supMsg">${esc(a.support_message)}</div><button class="btn secondary" id="copySup">Copy message</button>` : ""}
+    </div></details>`).join("");
+  }
+  h += `</div>`;
+  h += feedbackHtml(opts);
+  $("#answer").innerHTML = h;
+  const cp = $("#copySup"); if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(a.support_message); cp.textContent = "Copied"; } catch (e) { cp.textContent = "Select and copy the text above"; } };
+  wireFeedback();
+}
+
+function feedbackHtml(opts) {
+  const choose = opts.map(o => `<button class="chip" data-fb="chosen" data-v="${o.id}">${esc(o.title)}</button>`).join("") + `<button class="chip" data-fb="chosen" data-v="none">None of these</button>`;
+  return `<div class="card fb" id="fb"><h2>${scenario ? "Three quick questions" : "Was this useful?"}</h2>
+    <label>Do you understand what happened to your money?</label><div class="chips">${["yes","partly","no"].map(v => `<button class="chip" data-fb="understood" data-v="${v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join("")}</div>
+    <label>What would you do now?</label><div class="chips">${choose}</div>
+    <label>How clear was it? (1 = confusing, 5 = very clear)</label><div class="chips">${[1,2,3,4,5].map(v => `<button class="chip" data-fb="clarity" data-v="${v}">${v}</button>`).join("")}</div>
+    <button class="btn" id="sendFb">Send</button> <span class="muted" id="fbMsg"></span></div>`;
+}
+let fb = {};
+function wireFeedback() {
+  fb = {};
+  document.querySelectorAll("[data-fb]").forEach(b => b.addEventListener("click", () => {
+    fb[b.dataset.fb] = b.dataset.v;
+    document.querySelectorAll(`[data-fb="${b.dataset.fb}"]`).forEach(x => x.setAttribute("aria-pressed", x === b));
+  }));
+  $("#sendFb").onclick = async () => {
+    if (!fb.understood || !fb.chosen || !fb.clarity) { $("#fbMsg").textContent = "Please answer all three."; return; }
+    const r = await api("/api/feedback", Object.assign({ session_id: session, seconds: Math.round((Date.now() - started) / 1000), tester: !!scenario, scenario: scenario && scenario.id }, fb));
+    $("#fbMsg").textContent = r.ok ? "Thank you, saved." : "Could not save: " + (r.error || "");
+    if (r.ok) $("#sendFb").disabled = true;
+  };
+}
+
+// Scenarios for testers
+const SCEN = [
+  { id: "T1-stuck", title: "Money gone, no units", story: "Your ₹1,000 SIP was due on the 5th. ₹1,000 left your bank on the 5th. It is now the 9th and your portfolio shows nothing new. You are worried the money is lost." },
+  { id: "T2-failed", title: "Instalment failed", story: "You started your first SIP 3 months ago. This month you got a bank SMS that the debit bounced and a ₹300 fee was charged. You don't know if your SIP is cancelled or what to do." },
+  { id: "T3-tight", title: "Short this month", story: "Your SIP of ₹2,000 is on the 3rd. Your salary comes on the 7th. Rent and a medical bill mean your balance will be about ₹800 on the 3rd." },
+];
+$("#scenList").innerHTML = SCEN.map(s => `<div class="scen"><b>${esc(s.title)}</b><p>${esc(s.story)}</p><button class="btn secondary" data-scen="${s.id}">Start this scenario</button></div>`).join("");
+$("#scenList").addEventListener("click", e => {
+  const b = e.target.closest("[data-scen]"); if (!b) return;
+  scenario = SCEN.find(s => s.id === b.dataset.scen); started = Date.now();
+  chip = null; document.querySelectorAll("[data-chip]").forEach(x => x.setAttribute("aria-pressed", "false"));
+  $("#text").value = ""; $("#sipDay").value = ""; $("#salDay").value = ""; $("#answer").innerHTML = "";
+  $("#scenarioCard").hidden = false;
+  $("#scenarioCard").innerHTML = `<div class="sit">Scenario: ${esc(scenario.title)}</div><p>${esc(scenario.story)}</p><p class="muted">Use the helper below as you would in real life. <a href="#" id="endScen">Leave scenario</a></p>`;
+  $("#endScen").onclick = ev => { ev.preventDefault(); scenario = null; $("#scenarioCard").hidden = true; };
+  showTab("help");
+});
+
+// Quality check
+let evalBusy = false;
+async function loadEval(id) {
+  const j = await api("/api/eval" + (id ? "?id=" + encodeURIComponent(id) : ""));
+  if (!j.ok) { $("#gateBox").innerHTML = `<div class="notice">${esc(j.error)}</div>`; return; }
+  const g = j.gate, last = g.last;
+  $("#gateBox").innerHTML = last
+    ? `<p><span class="pill ${g.passed ? "ok" : "bad"}">${g.passed ? "Gate passed: AI on" : "Gate not passed: AI off"}</span></p>
+       <div class="stat"><b>${Math.round(last.score * 100)}%</b>right (${last.passed}/${last.n})</div><div class="stat"><b>${last.breaks}</b>rule breaks</div><div class="stat"><b>${last.errors}</b>failed calls</div>
+       <p class="muted">Model ${esc(g.model)} · prompt ${esc(g.prompt_version)} · ${new Date(last.ts).toLocaleString()}</p>`
+    : `<p><span class="pill bad">No check run yet: AI off</span></p><p class="muted">Model ${esc(g.model)} · prompt ${esc(g.prompt_version)}</p>`;
+  const meta = {}; j.case_meta.forEach(c => meta[c.id] = c);
+  const byId = {}; (j.cases || []).forEach(c => byId[c.case_id] = c);
+  $("#caseTable").innerHTML = `<table><thead><tr><th>#</th><th>Message (from)</th><th>Expected</th><th>AI said</th><th>Result</th></tr></thead><tbody>${j.case_meta.map(c => {
+    const r = byId[c.id];
+    return `<tr><td>${c.id}</td><td>${esc(c.text)}<br><span class="muted">${esc(c.from)} · ${esc(c.lang)}</span></td><td>${esc(c.expect)}${c.alt.length ? ` <span class="muted">(or ${esc(c.alt.join(", "))})</span>` : ""}<br><span class="muted">${esc(c.main.join(", ") || "no actions")}</span></td>
+      <td>${r ? esc(r.situation || "—") + `<br><span class="muted">${esc(r.actions)}</span>` : "—"}</td>
+      <td>${r ? (r.ok ? `<span class="pill ok">Pass</span>` : `<span class="pill bad">Fail</span><br><span class="muted">${esc(r.error || r.reasons)}</span>`) : "—"}</td></tr>`;
+  }).join("")}</tbody></table>`;
+  $("#runTable").innerHTML = j.runs.length ? `<table><thead><tr><th>When</th><th>Model · prompt</th><th>Right</th><th>Breaks</th><th>Gate</th></tr></thead><tbody>${j.runs.map(r => `<tr><td><a href="#" data-run="${r.id}">${new Date(r.ts).toLocaleString()}</a></td><td>${esc(r.model)} · ${esc(r.prompt_version)}</td><td>${r.complete ? Math.round(r.score * 100) + "%" : "not finished"}</td><td>${r.complete ? r.breaks : "—"}</td><td>${r.complete ? (r.gate ? "passed" : "not passed") : "—"}</td></tr>`).join("")}</tbody></table>` : `<p class="muted">No checks yet.</p>`;
+  document.querySelectorAll("[data-run]").forEach(a => a.onclick = e => { e.preventDefault(); loadEval(a.dataset.run); });
+}
+$("#runEval").addEventListener("click", async () => {
+  if (evalBusy) return; evalBusy = true; $("#runEval").disabled = true;
+  const s = await api("/api/eval/start", {});
+  if (!s.ok) { $("#evalMsg").textContent = s.error; evalBusy = false; $("#runEval").disabled = false; return; }
+  for (let i = 0; i < s.cases.length; i++) {
+    $("#evalMsg").innerHTML = `<span class="spin"></span>Testing ${i + 1} of ${s.cases.length}…`;
+    await api("/api/eval/case", { run_id: s.run_id, case_id: s.cases[i] });
+    if (i % 5 === 4) await loadEval(s.run_id);
+    await new Promise(r => setTimeout(r, window.EVAL_DELAY ?? 4500)); // stay under the free per-minute limit
+  }
+  const f = await api("/api/eval/finish", { run_id: s.run_id });
+  $("#evalMsg").textContent = f.ok ? `Done: ${Math.round(f.score * 100)}% right, ${f.breaks} rule breaks, ${f.errors} failed calls. Gate ${f.gate ? "passed: AI is on." : "not passed: AI stays off."}` : f.error;
+  evalBusy = false; $("#runEval").disabled = false; loadEval(s.run_id); loadGateLine();
+});
+
+// How it works: facts
+async function loadFacts() {
+  const j = await api("/api/facts"); if (!j.ok) return;
+  $("#factList").innerHTML = `<ul>${Object.values(j.facts).map(f => `<li>${esc(f.text)} <a href="${esc(j.sources[f.src].url)}" target="_blank" rel="noopener">${esc(j.sources[f.src].title)}</a></li>`).join("")}</ul><p>Prompt version ${esc(j.prompt_version)}.</p>`;
+}
+
+// Results
+async function loadResults() {
+  const j = await api("/api/results"); if (!j.ok) { $("#resBox").innerHTML = `<div class="notice">${esc(j.error)}</div>`; return; }
+  const s = j.sessions || {}, fbs = j.feedback || [];
+  const testers = fbs.filter(f => f.tester);
+  const pct = (a, b) => b ? Math.round(100 * a / b) + "%" : "—";
+  const und = testers.filter(f => f.understood === "yes").length, clr = testers.length ? (testers.reduce((a, f) => a + (f.clarity || 0), 0) / testers.length).toFixed(1) : "—";
+  const acted = testers.filter(f => f.chosen && f.chosen !== "none").length;
+  $("#resBox").innerHTML = `<div class="stat"><b>${s.n || 0}</b>times used</div><div class="stat"><b>${s.ai || 0}</b>AI answers</div><div class="stat"><b>${s.flagged || 0}</b>answers with a part removed</div><div class="stat"><b>${s.redacted || 0}</b>times personal data removed</div><div class="stat"><b>${s.avg_ms ? (s.avg_ms / 1000).toFixed(1) + "s" : "—"}</b>avg AI time</div>
+    <h3>Tester scenarios (${testers.length})</h3>
+    <div class="stat"><b>${pct(und, testers.length)}</b>understood what happened</div><div class="stat"><b>${pct(acted, testers.length)}</b>picked a next step</div><div class="stat"><b>${clr}</b>avg clarity (of 5)</div>
+    <div class="tablewrap"><table><thead><tr><th>Scenario</th><th>Understood</th><th>Would do</th><th>Clarity</th><th>Time</th></tr></thead><tbody>${testers.map(f => `<tr><td>${esc(f.scenario)}</td><td>${esc(f.understood)}</td><td>${esc(f.chosen)}</td><td>${f.clarity}</td><td>${f.seconds}s</td></tr>`).join("") || `<tr><td colspan="5" class="muted">No tester runs yet.</td></tr>`}</tbody></table></div>
+    <h3>Situations seen</h3><p class="muted">${(j.by_situation || []).map(r => `${esc(r.situation)}: ${r.n}`).join(" · ") || "None yet"}</p>`;
+}
+
+loadGateLine();
+const start = (location.hash || "").slice(1);
+if (["help","test","quality","how","results"].includes(start)) showTab(start);
+</script>
+</body>
+</html>

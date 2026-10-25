@@ -1,0 +1,12 @@
+name = "groww-sip-recovery-helper"
+main = "dist/worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[vars]
+MODEL = "gemini-3.5-flash-lite"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sip-recovery"
+database_id = "42364513-60ae-45b7-91ac-8359b999d2f3"
