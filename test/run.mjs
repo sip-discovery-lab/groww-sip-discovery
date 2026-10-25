@@ -23,7 +23,7 @@ const req = (path, body, method) => new Request("https://x.test" + path, body ? 
 const call = async (path, body, e = env) => { const r = await W.fetch(req(path, body), e); const ct = r.headers.get("content-type") || ""; return { status: r.status, body: ct.includes("json") ? await r.json() : await r.text() }; };
 
 // 1 page
-let r = await call("/");
+let r = await call("/helper");
 t("page served", r.status === 200 && r.body.includes("SIP Recovery Helper") && r.body.includes("Concept prototype for Groww"));
 t("page has no Groww branding claims", !/groww\.in\/(?!help|blog)/.test(r.body) && r.body.includes("Not an official Groww product"));
 // 2 no DB

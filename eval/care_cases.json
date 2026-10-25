@@ -1,0 +1,633 @@
+[
+ {
+  "id": "K01",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "NACH debit returned: Balance insufficient (reason code 01) on 03-Nov"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday",
+   "move_date_after_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "Demo user Riya"
+ },
+ {
+  "id": "K02",
+  "lang": "hinglish",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "NACH debit returned: Balance insufficient (reason code 01) on 03-Nov"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday",
+   "move_date_after_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "Simulated survey"
+ },
+ {
+  "id": "K03",
+  "lang": "hi",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "NACH debit returned: Balance insufficient (reason code 01) on 03-Nov"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday",
+   "move_date_after_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "Simulated survey"
+ },
+ {
+  "id": "K04",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 3,
+   "amount": 2000,
+   "sip_day": 5,
+   "salary_day": 10,
+   "bank_message": "UPI AutoPay debit failed - insufficient funds in remitter account"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "Play review"
+ },
+ {
+  "id": "K05",
+  "lang": "hinglish",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 2,
+   "amount": 500,
+   "sip_day": 1,
+   "salary_day": 5,
+   "bank_message": "Auto debit failed: Insufficient Balance"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "YouTube comment"
+ },
+ {
+  "id": "K06",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 2,
+   "instalment_no": 5,
+   "amount": 1500,
+   "sip_day": 2,
+   "salary_day": 10,
+   "bank_message": "ECS/NACH return - Funds Insufficient"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday",
+   "move_date_after_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "Simulated survey"
+ },
+ {
+  "id": "K07",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 3000,
+   "sip_day": 1,
+   "salary_day": 3,
+   "bank_message": "Mandate execution failed. Reason: INSUFFICIENT BALANCE"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "Forum"
+ },
+ {
+  "id": "K08",
+  "lang": "hi",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 5,
+   "salary_day": 15,
+   "bank_message": "Debit nahi hua - khaate mein paryapt balance nahi"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "Simulated survey"
+ },
+ {
+  "id": "K09",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 10,
+   "salary_day": 1,
+   "bank_message": "NACH debit returned: Balance insufficient (reason code 01)"
+  },
+  "expect_cause": "low_balance_one_off",
+  "must_plan": [
+   "pay_now"
+  ],
+  "must_not_plan": [
+   "retry_on_payday",
+   "move_date_after_payday"
+  ],
+  "first": "pay_now",
+  "from": "Simulated survey"
+ },
+ {
+  "id": "K10",
+  "lang": "hinglish",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 2000,
+   "sip_day": 15,
+   "salary_day": 7,
+   "bank_message": "UPI AutoPay failed: insufficient funds"
+  },
+  "expect_cause": "low_balance_one_off",
+  "must_plan": [
+   "pay_now"
+  ],
+  "must_not_plan": [
+   "move_date_after_payday"
+  ],
+  "first": "pay_now",
+  "from": "Play review"
+ },
+ {
+  "id": "K11",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 500,
+   "sip_day": 5,
+   "salary_day": null,
+   "bank_message": "Debit failed - insufficient balance"
+  },
+  "expect_cause": "low_balance_one_off",
+  "must_plan": [
+   "pay_now"
+  ],
+  "must_not_plan": [
+   "move_date_after_payday",
+   "retry_on_payday"
+  ],
+  "first": "pay_now",
+  "from": "Simulated survey"
+ },
+ {
+  "id": "K12",
+  "lang": "hi",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 7,
+   "salary_day": 7,
+   "bank_message": "Insufficient funds"
+  },
+  "expect_cause": "low_balance_one_off",
+  "must_plan": [
+   "pay_now"
+  ],
+  "must_not_plan": [
+   "move_date_after_payday"
+  ],
+  "first": "pay_now",
+  "from": "YouTube comment"
+ },
+ {
+  "id": "K13",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 2,
+   "amount": 500,
+   "sip_day": 10,
+   "salary_day": 7,
+   "bank_message": "Mandate not registered / not approved by customer bank"
+  },
+  "expect_cause": "mandate_inactive",
+  "must_plan": [
+   "fix_autopay"
+  ],
+  "must_not_plan": [
+   "retry_on_payday",
+   "move_date_after_payday"
+  ],
+  "first": "fix_autopay",
+  "from": "Play review"
+ },
+ {
+  "id": "K14",
+  "lang": "hinglish",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "UPI AutoPay mandate expired"
+  },
+  "expect_cause": "mandate_inactive",
+  "must_plan": [
+   "fix_autopay"
+  ],
+  "must_not_plan": [
+   "move_date_after_payday"
+  ],
+  "first": "fix_autopay",
+  "from": "YouTube comment"
+ },
+ {
+  "id": "K15",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 2000,
+   "sip_day": 5,
+   "salary_day": 1,
+   "bank_message": "Mandate revoked by customer"
+  },
+  "expect_cause": "mandate_inactive",
+  "must_plan": [
+   "fix_autopay"
+  ],
+  "must_not_plan": [],
+  "first": "fix_autopay",
+  "from": "Complaint site"
+ },
+ {
+  "id": "K16",
+  "lang": "hi",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": null,
+   "bank_message": "E-mandate pending approval at bank"
+  },
+  "expect_cause": "mandate_inactive",
+  "must_plan": [
+   "fix_autopay"
+  ],
+  "must_not_plan": [],
+  "first": "fix_autopay",
+  "from": "Play review"
+ },
+ {
+  "id": "K17",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "NACH return reason 11: Mandate cancelled"
+  },
+  "expect_cause": "mandate_inactive",
+  "must_plan": [
+   "fix_autopay"
+  ],
+  "must_not_plan": [
+   "retry_on_payday"
+  ],
+  "first": "fix_autopay",
+  "from": "Forum"
+ },
+ {
+  "id": "K18",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "Transaction timed out at remitter bank (technical decline)"
+  },
+  "expect_cause": "bank_technical",
+  "must_plan": [
+   "pay_now"
+  ],
+  "must_not_plan": [
+   "move_date_after_payday",
+   "retry_on_payday"
+  ],
+  "first": "pay_now",
+  "from": "Play review"
+ },
+ {
+  "id": "K19",
+  "lang": "hinglish",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 2000,
+   "sip_day": 5,
+   "salary_day": 10,
+   "bank_message": "Bank server unavailable, debit could not be processed"
+  },
+  "expect_cause": "bank_technical",
+  "must_plan": [
+   "pay_now"
+  ],
+  "must_not_plan": [
+   "move_date_after_payday"
+  ],
+  "first": "pay_now",
+  "from": "YouTube comment"
+ },
+ {
+  "id": "K20",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 500,
+   "sip_day": 10,
+   "salary_day": 1,
+   "bank_message": "Technical decline - issuer bank not reachable"
+  },
+  "expect_cause": "bank_technical",
+  "must_plan": [
+   "pay_now"
+  ],
+  "must_not_plan": [
+   "move_date_after_payday"
+  ],
+  "first": "pay_now",
+  "from": "Forum"
+ },
+ {
+  "id": "K21",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "Debit failed: account frozen by bank"
+  },
+  "expect_cause": "other",
+  "must_plan": [],
+  "must_not_plan": [
+   "retry_on_payday",
+   "move_date_after_payday"
+  ],
+  "first": null,
+  "from": "Complaint site"
+ },
+ {
+  "id": "K22",
+  "lang": "hinglish",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "Account closed"
+  },
+  "expect_cause": "other",
+  "must_plan": [],
+  "must_not_plan": [
+   "retry_on_payday",
+   "move_date_after_payday"
+  ],
+  "first": null,
+  "from": "Play review"
+ },
+ {
+  "id": "K23",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 2,
+   "instalment_no": 6,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "NACH debit returned: Balance insufficient (reason code 01)"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday",
+   "move_date_after_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "Edge: second failure"
+ },
+ {
+  "id": "K24",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "Insufficient balance. Customer note: should I switch to a better fund?"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "Edge: message hints at advice"
+ },
+ {
+  "id": "K25",
+  "lang": "en",
+  "state": {
+   "fund": "Bluechip Equity Fund (Demo)",
+   "plan": "Direct Growth",
+   "month": "Nov",
+   "next_month": "December",
+   "bank": "Account ••12",
+   "consecutive_failures": 1,
+   "instalment_no": 4,
+   "amount": 1000,
+   "sip_day": 3,
+   "salary_day": 7,
+   "bank_message": "Insufficient balance for a/c XXXX1234, PAN ABCDE1234F"
+  },
+  "expect_cause": "salary_after_sip_date",
+  "must_plan": [
+   "retry_on_payday"
+  ],
+  "must_not_plan": [],
+  "first": "retry_on_payday",
+  "from": "Edge: message with personal data"
+ }
+]

@@ -5,7 +5,7 @@ const { chromium } = require("playwright");
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage(); const errs = []; p.on("pageerror", e => errs.push(e.message)); p.on("console", m => { if (m.type() === "error") errs.push(m.text()); });
   await p.addInitScript(() => { window.EVAL_DELAY = 0; });
-  await p.goto("http://localhost:8788/"); await p.waitForTimeout(400);
+  await p.goto("http://localhost:8788/helper"); await p.waitForTimeout(400);
   t("banner", (await p.textContent(".banner")).includes("Not an official Groww product"));
   t("AI off line", /AI off/.test(await p.textContent("#gateLine")));
   await p.click("#go"); t("empty submit asks", /Tap what happened/.test(await p.textContent("#answer")));
@@ -51,7 +51,7 @@ const { chromium } = require("playwright");
   t("facts with links", (await p.$$("#factList a")).length === 9);
   t("no horizontal scroll", await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
   // dark mode
-  const d = await b.newPage({ colorScheme: "dark", viewport: { width: 390, height: 844 } }); await d.goto("http://localhost:8788/"); await d.click('[data-chip="instalment_failed"]'); await d.click("#go"); await d.waitForTimeout(600); await d.screenshot({ path: "shots/5_dark.png", fullPage: true });
+  const d = await b.newPage({ colorScheme: "dark", viewport: { width: 390, height: 844 } }); await d.goto("http://localhost:8788/helper"); await d.click('[data-chip="instalment_failed"]'); await d.click("#go"); await d.waitForTimeout(600); await d.screenshot({ path: "shots/5_dark.png", fullPage: true });
   const real = errs.filter(e => !/429/.test(e)); t("no console errors (except expected cooldown 429)", real.length === 0, real.join(" | "));
   console.log(`UI tests: ${pass} passed, ${fail} failed`); F.forEach(f => console.log("FAIL", f)); await b.close();
 })();

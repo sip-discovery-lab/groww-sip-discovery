@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Groww SIP Care · Concept</title>
+<meta name="description" content="Concept prototype for a Groww product case study: SIP Care, an AI agent that finds and fixes SIP instalment problems. Not an official Groww product.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#1b1f2a;--muted:#6b7280;--line:#e5e7eb;--subtle:#f5f7f8;--green:#00b386;--green-ink:#00865f;--green-bg:#e6f7f1;--amber:#b45309;--amber-bg:#fef3c7;--blue:#2563eb;--blue-bg:#eaf1fd;--r:14px;--on:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e1217;--card:#161b22;--ink:#e8edf3;--muted:#9aa6b4;--line:#283140;--subtle:#1c232d;--green:#2ccb98;--green-ink:#3ddcab;--green-bg:#123128;--amber:#f0a35a;--amber-bg:#35261a;--blue:#7fb0ea;--blue-bg:#1b2a3d;--on:#04261b}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.msi{width:22px;height:22px;display:inline-block;vertical-align:middle;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.msi.fill{fill:currentColor;stroke:none}
+.msi.fill .cut{stroke:var(--card);fill:none;stroke-width:2.2}
+.chip .msi{width:14px;height:14px}.sc .msi{width:16px;height:16px}.receipt .msi{width:18px;height:18px}.step .b .msi{width:16px;height:16px}.halo .msi{width:40px;height:40px}
+nav.bottom .msi{width:22px;height:22px}
+@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .8s linear infinite}
+.phone{max-width:430px;min-height:100vh;margin:0 auto;background:var(--card);display:flex;flex-direction:column;position:relative;box-shadow:0 0 0 1px var(--line)}
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid transparent}
+.top.inner{border-bottom-color:var(--line)}
+.brand{display:flex;align-items:center;gap:8px}
+.word{font-weight:700;font-size:21px;letter-spacing:-.02em;color:var(--green)}
+.concept{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--subtle);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+.iconbtn{width:38px;height:38px;border-radius:50%;border:0;background:var(--subtle);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.iconbtn .dot{position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--amber);border:2px solid var(--card)}
+.ttl{font-weight:600;font-size:17px;display:flex;align-items:center;gap:8px}
+main{flex:1;padding:4px 16px 96px;display:flex;flex-direction:column;gap:14px}
+h2{font-size:20px;margin:6px 0 0;font-weight:600}
+h3{font-size:16px;margin:0;font-weight:600}
+.muted{color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.value .big{font-size:26px;font-weight:600;letter-spacing:-.01em}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;border-radius:999px;padding:3px 8px}
+.ok{color:var(--green-ink);background:var(--green-bg)}.warn{color:var(--amber);background:var(--amber-bg)}.info{color:var(--blue);background:var(--blue-bg)}.mutedc{color:var(--muted);background:var(--subtle)}
+.issue{background:var(--amber-bg);border:0;position:relative;overflow:hidden}
+.issue h3{color:var(--amber)}
+.issue .safe{background:color-mix(in srgb,var(--card) 85%,transparent);border-radius:10px;padding:10px;display:flex;gap:8px;align-items:center;font-size:13px;font-weight:500;margin:10px 0}
+.success{background:var(--green-bg);border:0}
+.agentbadge{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.sc{width:26px;height:26px;border-radius:8px;background:var(--green);color:var(--on);display:flex;align-items:center;justify-content:center}
+.aitag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--green-ink);background:var(--green-bg);border-radius:6px;padding:2px 6px}
+.stdtag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--subtle);border-radius:6px;padding:2px 6px}
+.newtag{font-size:10px;font-weight:700;color:var(--on);background:var(--green);border-radius:5px;padding:1px 5px;margin-left:6px}
+.btn{height:46px;border-radius:10px;border:0;background:var(--green);color:var(--on);font:inherit;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.btn.sec{background:transparent;color:var(--green-ink);border:1px solid var(--green)}
+.btn.ghost{background:transparent;color:var(--muted)}
+.btn:disabled{opacity:.55;cursor:default}
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+.qa button{background:none;border:0;color:var(--ink);font:inherit;font-size:12px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:default}
+.qa button.live{cursor:pointer}
+.qa .tile{width:50px;height:50px;border-radius:14px;background:var(--subtle);display:flex;align-items:center;justify-content:center;color:var(--green-ink);position:relative}
+.qa .badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:var(--amber);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.row{display:flex;align-items:center;gap:12px}
+.fund{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px}
+.fi{width:40px;height:40px;border-radius:10px;background:var(--subtle);color:var(--green-ink);font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.fund .name{font-weight:500;font-size:14px}
+.sectionh{display:flex;justify-content:space-between;align-items:center}
+.link{color:var(--green-ink);font-weight:600;font-size:13px;background:none;border:0;padding:0;cursor:pointer;font-family:inherit}
+nav.bottom{position:sticky;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);height:64px;padding-bottom:env(safe-area-inset-bottom)}
+nav.bottom div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:500;color:var(--muted)}
+nav.bottom div.on{color:var(--green-ink)}
+.thread{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:10px 12px;border-radius:14px;font-size:14px}
+.msg.user{align-self:flex-end;background:var(--green);color:var(--on);border-bottom-right-radius:4px}
+.msg.agent{align-self:flex-start;background:var(--subtle);border-bottom-left-radius:4px}
+.msg .meta{display:flex;gap:6px;align-items:center;margin-bottom:4px}
+.receipt{align-self:flex-start;font-size:13px;color:var(--green-ink);display:flex;gap:6px;align-items:flex-start}
+.notice{font-size:12px;color:var(--amber);background:var(--amber-bg);border-radius:10px;padding:8px 10px}
+.prop{border:1px solid var(--green);background:var(--green-bg);border-radius:12px;padding:12px;align-self:stretch}
+.prop.danger{border-color:var(--line);background:var(--subtle)}
+.prop .t{font-weight:600;font-size:14px}
+.prop .s{font-size:13px;color:var(--muted);margin-top:2px}
+.composer{position:sticky;bottom:64px;background:var(--card);border-top:1px solid var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:8px;z-index:15}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer}
+.inp{display:flex;gap:8px}
+.inp input{flex:1;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--subtle);color:var(--ink);font:inherit;padding:0 12px}
+.inp button{width:44px;height:44px;border-radius:12px;border:0;background:var(--green);color:var(--on);cursor:pointer}
+.lang{display:flex;background:var(--subtle);border-radius:999px;padding:2px}
+.lang button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:11px;font-weight:600;padding:5px 8px;border-radius:999px;cursor:pointer}
+.lang button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.sheetwrap{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(15,20,25,.45)}
+.sheet{width:100%;max-width:430px;background:var(--card);border-radius:20px 20px 0 0;padding:14px 16px 20px;max-height:88vh;overflow:auto}
+.handle{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.kv{border:1px solid var(--line);border-radius:12px;margin-top:10px}
+.kv div{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;font-size:13px;border-top:1px solid var(--line)}
+.kv div:first-child{border-top:0}
+.kv span:first-child{color:var(--muted)}
+.kv span:last-child{font-weight:500;text-align:right}
+.check{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px;margin-top:10px;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--green);margin-top:2px;flex:none}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{display:flex;gap:10px;align-items:flex-start;animation:rise .35s ease both}
+.step .b{width:24px;height:24px;border-radius:50%;background:var(--green);color:var(--on);display:flex;align-items:center;justify-content:center;flex:none}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:10px 0}
+.halo{width:80px;height:80px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;color:var(--green)}
+.typing{display:inline-flex;gap:4px}.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:b 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.fb button.opt{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;cursor:pointer}
+.fb button.opt[aria-pressed=true]{border-color:var(--green);background:var(--green-bg);color:var(--green-ink)}
+.foot{display:flex;justify-content:center;gap:16px;padding:4px 0 8px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="phone" id="app"></div>
+<script>
+const API = "";
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const IC = {
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  notifications: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/>',
+  verified_user: '<path d="M12 3 4 6v6c0 5 3.4 8.6 8 9.5 4.6-.9 8-4.5 8-9.5V6z"/><path class="cut" d="m8.5 12 2.5 2.5 4.5-5"/>',
+  shield: '<path d="M12 3 4 6v6c0 5 3.4 8.6 8 9.5 4.6-.9 8-4.5 8-9.5V6z"/>',
+  shield_with_heart: '<path d="M12 3 4 6v6c0 5 3.4 8.6 8 9.5 4.6-.9 8-4.5 8-9.5V6z"/><path d="M12 16s-3.5-2.1-3.5-4.4A1.9 1.9 0 0 1 12 10.5a1.9 1.9 0 0 1 3.5 1.1C15.5 13.9 12 16 12 16z"/>',
+  auto_fix_high: '<path d="m4 20 11-11 2 2L6 22z"/><path d="M15 4v3M13.5 5.5h3M20 9v2M19 10h2M19 2v2M18 3h2"/>',
+  calendar_month: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
+  calendar_today: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  receipt_long: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  check_circle: '<circle cx="12" cy="12" r="9"/><path class="cut" d="m8 12 3 3 5-6"/>',
+  check: '<path d="m5 12 5 5 9-10"/>',
+  schedule: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  warning: '<path d="M10.3 4 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  block: '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
+  pause_circle: '<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>',
+  health_and_safety: '<path d="M12 3 4 6v6c0 5 3.4 8.6 8 9.5 4.6-.9 8-4.5 8-9.5V6z"/><path d="M12 9v6M9 12h6"/>',
+  arrow_forward: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  arrow_back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  send: '<path d="m4 12 16-8-6 16-2.5-6.5z"/><path d="M20 4 11.5 13.5"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
+  task_alt: '<path d="M21 11.1V12a9 9 0 1 1-5.3-8.2"/><path d="m9 11 3 3 9-9"/>',
+  progress_activity: '<path d="M21 12a9 9 0 1 1-9-9"/>',
+  home: '<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  explore: '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+  pie_chart: '<path d="M21 12A9 9 0 1 1 12 3v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/>',
+  person: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+};
+const FILLABLE = { home: 1, check_circle: 1, verified_user: 1 };
+const ic = (n, cls = "") => { const fill = /fill/.test(cls) && FILLABLE[n]; const spin = n === "progress_activity" ? " spin" : ""; return `<svg class="msi ${fill ? "fill" : ""}${spin} ${cls.replace("fill", "")}" viewBox="0 0 24 24" aria-hidden="true">${IC[n] || IC.info}</svg>`; };
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+const post = async (p, b) => { try { const r = await fetch(API + p, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b || {}) }); return await r.json(); } catch (e) { return { ok: false, error: "Can't reach SIP Care right now. Check your connection and try again." }; } };
+
+const S = { session: store.get("sipcare_session"), view: null, pending: [], thread: [], lang: store.get("sipcare_lang") || "en", busy: false, lastFix: null, steps: [], fbDone: false, started: Date.now(), autoFixDone: false };
+const L = {
+  en: { ask: "Ask SIP Care about any SIP problem", chips: ["Is my money safe?", "Will my SIP be cancelled?", "Change my SIP date", "Mera paisa kat gaya par units nahi aaye"] },
+  hinglish: { ask: "Apni SIP ki koi bhi problem likhiye", chips: ["Kya mera paisa safe hai?", "Kya meri SIP cancel ho jayegi?", "SIP date badalni hai", "Paisa kat gaya par units nahi aaye"] },
+  hi: { ask: "अपनी SIP की कोई भी समस्या लिखिए", chips: ["क्या मेरा पैसा सुरक्षित है?", "क्या मेरी SIP बंद हो जाएगी?", "SIP की तारीख बदलनी है", "पैसा कट गया पर यूनिट नहीं आए"] },
+};
+
+function navBar() {
+  const t = [["home", "Home"], ["explore", "Explore"], ["calendar_today", "SIPs"], ["pie_chart", "Portfolio"], ["person", "Account"]];
+  return `<nav class="bottom" aria-label="App navigation (not active in this prototype)">${t.map(([i, l], k) => `<div class="${k === 0 ? "on" : ""}" aria-disabled="true">${ic(i, k === 0 ? "fill" : "")}${l}</div>`).join("")}</nav>`;
+}
+function fundRow(s) {
+  const tone = { ok: "ok", warn: "warn", info: "info", muted: "mutedc" }[s.tone] || "mutedc";
+  return `<div class="fund"><div class="fi">${esc(s.fund[0])}</div><div style="flex:1;min-width:0"><div class="name">${esc(s.fund)}</div><div class="muted">${esc("₹" + Number(s.amount).toLocaleString("en-IN"))} · ${esc(s.day_label)}${s.skip_next ? " · next skipped" : ""}</div><div style="margin-top:6px"><span class="chip ${tone}">${ic(s.icon)}${esc(s.label)}</span></div></div></div>`;
+}
+
+// ---------------- HOME ----------------
+function home() {
+  const v = S.view; if (!v) return loading();
+  const issues = v.issues;
+  const first = issues[0];
+  let attention = "";
+  if (S.lastFix) {
+    attention = `<div class="card success" id="successCard"><div class="row" style="justify-content:space-between"><span class="sc" style="width:32px;height:32px;border-radius:50%">${ic("check")}</span><span class="aitag">AI agent</span></div>
+      <h3 style="margin-top:10px">SIP Care fixed your SIP</h3><p style="margin:6px 0 0;font-size:14px">${esc(S.lastFix.replace(/^SIP Care: /, ""))}</p>
+      <button class="link" style="margin-top:10px" id="viewDid">View what SIP Care did ${ic("arrow_forward")}</button></div>`;
+  }
+  if (first) {
+    attention += `<div class="card issue"><div class="row" style="align-items:flex-start"><span class="chip warn" style="padding:6px;border-radius:50%">${ic("info")}</span><div><h3>${esc(issues.length > 1 ? `SIP Care found ${issues.length} issues` : first.title)}</h3><div style="font-size:13px;color:var(--amber);margin-top:2px">${esc(issues.length > 1 ? issues.map(i => i.title).join(" · ") : first.line)}</div></div></div>
+      <div class="safe">${ic("verified_user", "fill")}<span>Your invested money is safe. A fix is ready.</span></div>
+      <div class="row" style="justify-content:space-between;margin-bottom:12px"><span class="agentbadge"><span class="sc">${ic("shield_with_heart")}</span>SIP Care <span class="aitag">AI agent</span></span></div>
+      <button class="btn" id="fixBtn">${ic("auto_fix_high")} Fix with SIP Care</button></div>`;
+  }
+  const fb = S.lastFix && !S.fbDone ? feedbackCard() : "";
+  return `<header class="top"><div class="brand"><span class="word">Groww</span><span class="concept">Concept</span></div><div class="row" style="gap:8px"><button class="iconbtn" aria-label="Search">${ic("search")}</button><button class="iconbtn" aria-label="Notifications">${ic("notifications")}${issues.length ? '<span class="dot"></span>' : ""}</button></div></header>
+  <main>
+    <div class="row" style="justify-content:space-between"><h2>Hi ${esc(v.user)}</h2></div>
+    <div class="card value"><div class="row" style="justify-content:space-between"><span class="muted" style="font-weight:500">Total Mutual Funds</span></div><div class="row" style="gap:8px;margin-top:6px;align-items:baseline"><span class="big">₹3,120</span><span class="muted">Current value</span></div><div class="muted" style="margin-top:4px">Invested ₹3,000 · ${v.sips.filter(s => s.label !== "Stopped").length} active SIPs</div></div>
+    ${attention}
+    ${fb}
+    <div class="qa">
+      <button class="live" id="qaCare"><span class="tile">${ic("shield_with_heart")}${issues.length ? `<span class="badge">${issues.length}</span>` : ""}</span>SIP Care</button>
+      <button aria-disabled="true"><span class="tile">${ic("calendar_month")}</span>My SIPs</button>
+      <button aria-disabled="true"><span class="tile">${ic("receipt_long")}</span>Orders</button>
+      <button aria-disabled="true"><span class="tile">${ic("bolt")}</span>Autopilot</button>
+    </div>
+    <div class="sectionh"><h3>Your SIPs</h3><span class="muted">${v.sips.length} SIPs</span></div>
+    ${v.sips.map(fundRow).join("")}
+    <div class="card" style="background:var(--subtle);border:0"><div class="row" style="align-items:flex-start">${ic("health_and_safety")}<div><div style="font-weight:600;font-size:14px">Protected with SIP Care</div><div class="muted" style="margin-top:2px">SIP Care watches your SIPs and prepares a fix when something goes wrong. It does safe things itself and asks you before anything that moves money or changes a SIP.</div></div></div></div>
+    <div class="foot"><a class="link" href="/quality" target="_blank" rel="noopener">How SIP Care is tested</a><button class="link" id="reset">Reset demo</button></div>
+    <p class="muted" style="text-align:center;margin:0">Concept prototype for a Groww case study · not an official Groww product · demo data · not investment advice</p>
+  </main>${navBar()}`;
+}
+function feedbackCard() {
+  const q = (k, opts) => `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${opts.map(([v, t]) => `<button class="opt" data-k="${k}" data-v="${v}" aria-pressed="false">${t}</button>`).join("")}</div>`;
+  return `<div class="card fb" id="fb"><h3>3 quick questions</h3><p class="muted" style="margin:2px 0 8px">Helps us learn if SIP Care worked for you. No personal data.</p>
+    <div style="font-size:13px;font-weight:500">Did you understand what happened to your money?</div>${q("understood", [["yes", "Yes"], ["partly", "Partly"], ["no", "No"]])}
+    <div style="font-size:13px;font-weight:500;margin-top:10px">Was your SIP fixed?</div>${q("fixed", [["yes", "Yes"], ["no", "No"]])}
+    <div style="font-size:13px;font-weight:500;margin-top:10px">How clear was it? (1 = confusing, 5 = very clear)</div>${q("clarity", [1, 2, 3, 4, 5].map(n => [n, n]))}
+    <button class="btn" style="margin-top:12px" id="fbSend">Submit</button><div class="muted" id="fbMsg" style="margin-top:6px"></div></div>`;
+}
+
+// ---------------- SIP CARE (agent) ----------------
+function care() {
+  const v = S.view; if (!v) return loading();
+  const langBtns = [["en", "EN"], ["hinglish", "Hinglish"], ["hi", "हिंदी"]].map(([k, t]) => `<button data-lang="${k}" aria-pressed="${S.lang === k}">${t}</button>`).join("");
+  const issues = v.issues.map(i => `<div class="fund"><div class="fi">${esc(((v.sips.find(x => x.id === i.sip_id) || {}).fund || "S")[0])}</div><div style="flex:1;min-width:0"><div class="name">${esc(i.title)}</div><div class="muted">${esc(i.line)}</div></div><button class="btn sec" style="width:auto;height:36px;padding:0 14px" data-fix="${i.sip_id}">Fix</button></div>`).join("");
+  return `<header class="top inner"><div class="row" style="gap:6px"><button class="iconbtn" style="background:none" aria-label="Back" id="back">${ic("arrow_back")}</button><span class="sc">${ic("shield_with_heart")}</span><span class="ttl">SIP Care <span class="aitag">AI agent</span></span></div><div class="lang" role="group" aria-label="Language">${langBtns}</div></header>
+  <main style="padding-bottom:180px">
+    <p class="muted" style="margin:6px 0 0">Finds and fixes SIP problems for you. Safe steps happen automatically; anything that moves money or changes a SIP waits for your confirm.</p>
+    ${v.issues.length ? `<div><h3 style="margin-bottom:8px">Found for you</h3><div style="display:flex;flex-direction:column;gap:8px">${issues}</div></div>` : `<div class="card success"><div class="row">${ic("check_circle", "fill")}<b>All your SIPs are on track</b></div></div>`}
+    <div class="thread" id="thread">${S.thread.map(renderItem).join("")}</div>
+    ${S.busy ? `<div class="msg agent"><span class="typing"><i></i><i></i><i></i></span></div>` : ""}
+    ${S.pending.length ? `<button class="btn" id="review">${ic("task_alt")} Review and confirm (${S.pending.length})</button>` : ""}
+  </main>
+  <div class="composer"><div class="chips">${L[S.lang].chips.map(c => `<button data-chip="${esc(c)}">${esc(c)}</button>`).join("")}</div>
+    <form class="inp" id="ask"><input id="q" maxlength="500" autocomplete="off" placeholder="${esc(L[S.lang].ask)}" aria-label="Message SIP Care"><button aria-label="Send">${ic("send")}</button></form>
+    <div class="muted" style="font-size:11px">Don't share PAN, account numbers, OTP or PIN. SIP Care never asks for them.</div></div>
+  ${navBar()}`;
+}
+function renderItem(it) {
+  if (it.kind === "user") return `<div class="msg user">${esc(it.text)}</div>`;
+  if (it.kind === "agent") return `<div class="msg agent"><div class="meta"><span class="sc" style="width:20px;height:20px;border-radius:6px">${ic("shield_with_heart")}</span><b style="font-size:12px">SIP Care</b>${it.ai ? '<span class="aitag">AI</span>' : '<span class="stdtag">Standard</span>'}</div>${esc(it.text)}</div>`;
+  if (it.kind === "notice") return `<div class="notice">${esc(it.text)}</div>`;
+  if (it.kind === "done") return `<div class="receipt">${ic("check_circle", "fill")}<span><b>Done automatically:</b> ${esc(it.text)}</span></div>`;
+  if (it.kind === "skip") return `<div class="receipt" style="color:var(--muted)">${ic("info")}<span>Not possible: ${esc(it.text)}</span></div>`;
+  if (it.kind === "prop") { const p = it.p; const still = S.pending.some(x => x.id === p.id); return `<div class="prop ${p.danger ? "danger" : ""}"><div class="t">${esc(p.title)}${p.isNew ? '<span class="newtag">New</span>' : ""}</div><div class="s">${esc(p.summary)}</div>${still ? `<div class="row" style="gap:8px;margin-top:10px"><button class="btn" style="height:38px" data-confirm="${p.id}">Confirm</button><button class="btn ghost" style="height:38px;width:auto;padding:0 12px" data-decline="${p.id}">Not now</button></div>` : `<div class="muted" style="margin-top:6px">${it.state === "declined" ? "Not done" : "✓ Done"}</div>`}</div>`; }
+  return "";
+}
+
+// ---------------- CONFIRM SHEET ----------------
+function openConfirm(ids) {
+  const props = S.pending.filter(p => ids.includes(p.id));
+  if (!props.length) return;
+  const w = document.createElement("div"); w.className = "sheetwrap"; w.id = "sheet";
+  w.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cfT"><div class="handle"></div>
+    <div class="row" style="justify-content:space-between"><span class="chip ok">${ic("auto_fix_high")}AI agent</span><button class="iconbtn" style="background:none" id="cfX" aria-label="Close">${ic("close")}</button></div>
+    <h3 id="cfT" style="font-size:20px;margin-top:8px">Confirm SIP Care's fix</h3>
+    <p class="muted" style="font-size:14px">Nothing happens until you confirm. Untick anything you don't want.</p>
+    ${props.map(p => `<label class="check"><input type="checkbox" data-pid="${p.id}" checked><div style="flex:1"><div style="font-weight:600;font-size:14px">${esc(p.title)}${p.isNew ? '<span class="newtag">New</span>' : ""}</div><div class="muted">${esc(p.summary)}</div>${(p.rows || []).length ? `<div class="kv">${p.rows.map(([k, val]) => `<div><span>${esc(k)}</span><span>${esc(val)}</span></div>`).join("")}</div>` : ""}${p.note ? `<div class="notice" style="margin-top:8px;color:${p.danger ? "var(--muted)" : "var(--amber)"};background:${p.danger ? "var(--subtle)" : "var(--amber-bg)"}">${esc(p.note)}</div>` : ""}</div></label>`).join("")}
+    <button class="btn" style="margin-top:14px" id="cfGo">${ic("bolt")} Confirm and fix</button>
+    <button class="btn ghost" style="margin-top:4px" id="cfBack">Go back</button></div>`;
+  document.body.appendChild(w);
+  const close = () => w.remove();
+  w.addEventListener("click", e => { if (e.target === w) close(); });
+  $("#cfX").onclick = close; $("#cfBack").onclick = close;
+  $("#cfGo").onclick = async () => {
+    const chosen = [...w.querySelectorAll("[data-pid]")].filter(x => x.checked).map(x => x.dataset.pid);
+    if (!chosen.length) { close(); return; }
+    $("#cfGo").disabled = true; $("#cfGo").innerHTML = `${ic("progress_activity")} Scheduling fix…`;
+    const r = await post("/api/agent/confirm", { session_id: S.session, proposal_ids: chosen });
+    close();
+    if (!r.ok) { S.thread.push({ kind: "notice", text: r.error || "Couldn't complete that. Please try again." }); render(); return; }
+    S.thread.forEach(it => { if (it.kind === "prop" && chosen.includes(it.p.id)) it.state = "done"; });
+    S.pending = r.pending; S.view = r.view; S.steps = r.steps; S.lastFix = r.home_message; S.fbDone = false;
+    (r.failed || []).forEach(f => S.thread.push({ kind: "skip", text: `${f.title}: ${f.why}` }));
+    go("fixing");
+  };
+}
+
+// ---------------- FIXING ----------------
+function fixing() {
+  return `<header class="top inner"><div class="row" style="gap:6px"><span class="sc">${ic("shield_with_heart")}</span><span class="ttl">SIP Care <span class="aitag">AI agent</span></span></div></header>
+  <main><div class="hero"><div class="halo">${ic("verified_user", "fill")}</div><h2>SIP Care is fixing this</h2><p class="muted" style="margin:0">You confirmed this fix</p></div>
+    <div class="card"><div class="row" style="justify-content:space-between;margin-bottom:12px"><span class="muted" style="font-weight:500">Actions</span><span class="chip ok" id="cnt">0 / ${S.steps.length} complete</span></div><div class="steps" id="steps"></div></div>
+    <div id="doneBox" class="hidden" style="display:flex;flex-direction:column;gap:10px">
+      <div class="card success"><div class="row" style="font-weight:600;color:var(--green-ink)">${ic("check_circle", "fill")} Done. Your SIP is active.</div></div>
+      <div class="card" style="background:var(--subtle);border:0"><div class="row" style="align-items:flex-start">${ic("shield")}<div><div style="font-weight:600;font-size:14px">Your invested money is safe</div><div class="muted">Units you already hold are not affected.</div></div></div></div>
+      <button class="btn" id="toHome">Back to Home ${ic("arrow_forward")}</button></div>
+  </main>${navBar()}`;
+}
+function runSteps() {
+  let n = 0;
+  const t = setInterval(() => {
+    if (n < S.steps.length) {
+      $("#steps").insertAdjacentHTML("beforeend", `<div class="step"><span class="b">${ic("check")}</span><div style="font-size:14px;font-weight:500">${esc(S.steps[n])}</div></div>`);
+      n++; $("#cnt").textContent = `${n} / ${S.steps.length} complete`;
+    } else { clearInterval(t); $("#doneBox").classList.remove("hidden"); $("#toHome").onclick = () => go("home"); }
+  }, 450);
+}
+
+// ---------------- AGENT CALLS ----------------
+async function send(message, shown) {
+  if (S.busy) return;
+  S.busy = true;
+  S.thread.push({ kind: "user", text: shown || message });
+  render(); scrollEnd();
+  const r = await post("/api/agent/message", { session_id: S.session, message, lang: S.lang });
+  S.busy = false;
+  if (!r.ok) { if (/session/.test(r.error || "")) await start(true); S.thread.push({ kind: "notice", text: r.error || "Something went wrong." }); render(); return; }
+  if (r.redacted && r.redacted.length) S.thread.push({ kind: "notice", text: `We removed what looked like your ${r.redacted.join(", ")}. Please don't share these.` });
+  if (r.notice) S.thread.push({ kind: "notice", text: r.notice });
+  S.thread.push({ kind: "agent", text: r.reply, ai: r.used_ai });
+  (r.done || []).forEach(d => S.thread.push({ kind: "done", text: d }));
+  (r.skipped || []).forEach(sk => S.thread.push({ kind: "skip", text: sk.why }));
+  (r.proposals || []).forEach(p => S.thread.push({ kind: "prop", p }));
+  S.pending = r.pending; S.view = r.view;
+  render(); scrollEnd();
+}
+async function start(reset) {
+  const r = await post("/api/agent/start", { session_id: reset ? "" : S.session, reset: !!reset });
+  if (!r.ok) { $("#app").innerHTML = `<main><div class="notice" style="margin-top:20px">${esc(r.error || "Can't load the demo.")}</div></main>`; return false; }
+  S.session = r.session_id; store.set("sipcare_session", r.session_id);
+  S.view = r.view; S.pending = r.pending || [];
+  if (reset) { S.thread = []; S.lastFix = null; S.fbDone = false; S.autoFixDone = false; }
+  return true;
+}
+
+// ---------------- ROUTER ----------------
+let screen = "home";
+function go(s, opts) { screen = s; try { history.replaceState(null, "", s === "home" ? "#/" : "#/" + s); } catch (e) {} render(); window.scrollTo(0, 0); if (s === "fixing") runSteps(); if (opts && opts.autofix) autoFix(); }
+function loading() { return `<main><div class="hero" style="margin-top:40vh"><span class="typing"><i></i><i></i><i></i></span></div></main>`; }
+function scrollEnd() { setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 30); }
+function autoFix() {
+  const first = S.view && S.view.issues[0];
+  if (first && !S.autoFixDone) { S.autoFixDone = true; send(`__fix__:${first.sip_id}`, `Fix: ${first.title}`); }
+}
+function render() {
+  $("#app").innerHTML = screen === "care" ? care() : screen === "fixing" ? fixing() : home();
+  wire();
+}
+function wire() {
+  const on = (sel, fn) => { const el = $(sel); if (el) el.onclick = fn; };
+  on("#fixBtn", () => go("care", { autofix: true }));
+  on("#qaCare", () => go("care"));
+  on("#back", () => go("home"));
+  on("#review", () => openConfirm(S.pending.map(p => p.id)));
+  on("#reset", async () => { await start(true); go("home"); });
+  on("#viewDid", () => { const v = S.view; const items = (v.activity || []).slice(0, 8); const w = document.createElement("div"); w.className = "sheetwrap"; w.innerHTML = `<div class="sheet"><div class="handle"></div><h3>What SIP Care did</h3><div class="steps" style="margin-top:12px">${items.map(a => `<div class="step"><span class="b">${ic("check")}</span><div style="font-size:14px">${esc(a.text)}<div class="muted">${a.auto ? "Done automatically" : "You confirmed"}</div></div></div>`).join("")}</div><button class="btn" style="margin-top:16px" id="gotIt">Got it</button></div>`; document.body.appendChild(w); w.onclick = e => { if (e.target === w || e.target.id === "gotIt") w.remove(); }; });
+  document.querySelectorAll("[data-fix]").forEach(b => b.onclick = () => { const i = S.view.issues.find(x => x.sip_id === b.dataset.fix); send(`__fix__:${b.dataset.fix}`, `Fix: ${i ? i.title : "this SIP"}`); });
+  document.querySelectorAll("[data-chip]").forEach(b => b.onclick = () => send(b.dataset.chip));
+  document.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => { S.lang = b.dataset.lang; store.set("sipcare_lang", S.lang); render(); });
+  document.querySelectorAll("[data-confirm]").forEach(b => b.onclick = () => openConfirm([b.dataset.confirm]));
+  document.querySelectorAll("[data-decline]").forEach(b => b.onclick = async () => { const r = await post("/api/agent/decline", { session_id: S.session, proposal_id: b.dataset.decline }); if (r.ok) { S.pending = r.pending; S.thread.forEach(it => { if (it.kind === "prop" && it.p.id === b.dataset.decline) it.state = "declined"; }); render(); } });
+  const f = $("#ask"); if (f) f.onsubmit = e => { e.preventDefault(); const q = $("#q").value.trim(); if (q) { $("#q").value = ""; send(q); } };
+  const fb = {}; document.querySelectorAll("#fb [data-k]").forEach(b => b.onclick = () => { fb[b.dataset.k] = b.dataset.v; document.querySelectorAll(`#fb [data-k="${b.dataset.k}"]`).forEach(x => x.setAttribute("aria-pressed", x === b)); });
+  on("#fbSend", async () => { if (!fb.understood || !fb.fixed || !fb.clarity) { $("#fbMsg").textContent = "Please answer all three."; return; } const r = await post("/api/agent/feedback", Object.assign({ session_id: S.session }, fb)); if (r.ok) { S.fbDone = true; render(); } else $("#fbMsg").textContent = r.error || "Couldn't save."; });
+}
+
+(async () => {
+  render();
+  if (await start(false)) { const h = location.hash.replace("#/", ""); go(h === "care" ? "care" : "home"); }
+})();
+</script>
+</body>
+</html>

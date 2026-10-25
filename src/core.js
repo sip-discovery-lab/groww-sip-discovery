@@ -14,14 +14,15 @@ function errText(status, body) {
   return `HTTP ${status} · ${msg.slice(0, 220)}${hint}`;
 }
 
-async function callGemini(env, input) {
-  if (env.GEMINI_MOCK) return env.GEMINI_MOCK(input);
+async function callGemini(env, input, task) {
+  task = task || { system: systemPrompt(), user: userPrompt(input), schema: RESPONSE_SCHEMA, mock: env.GEMINI_MOCK };
+  if (task.mock) return task.mock(input);
   if (!env.GEMINI_API_KEY) throw new Error("No Gemini key set (add the GEMINI_API_KEY secret)");
   const model = env.MODEL || DEFAULT_MODEL;
   const body = {
-    systemInstruction: { parts: [{ text: systemPrompt() }] },
-    contents: [{ role: "user", parts: [{ text: userPrompt(input) }] }],
-    generationConfig: { responseMimeType: "application/json", responseSchema: RESPONSE_SCHEMA, temperature: 0.2, maxOutputTokens: 1200 },
+    systemInstruction: { parts: [{ text: task.system }] },
+    contents: [{ role: "user", parts: [{ text: task.user }] }],
+    generationConfig: { responseMimeType: "application/json", responseSchema: task.schema, temperature: 0.2, maxOutputTokens: 1200 },
   };
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   let last = "";

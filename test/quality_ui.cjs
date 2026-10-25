@@ -1,0 +1,10 @@
+const { chromium } = require("playwright");
+(async () => { const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 390, height: 844 } }); const errs = []; p.on("pageerror", e => errs.push(e.message));
+await p.addInitScript(() => { window.EVAL_DELAY = 0; });
+await p.goto("http://localhost:8788/quality"); await p.waitForTimeout(500);
+await p.click("#run"); await p.waitForFunction(() => /Done:/.test(document.querySelector("#msg").textContent), null, { timeout: 60000 });
+console.log(await p.textContent("#msg")); await p.waitForTimeout(500);
+console.log("pass pills", (await p.$$(".pill.ok")).length, "scrollW", await p.evaluate(() => document.documentElement.scrollWidth));
+await p.screenshot({ path: "/home/claude/mvp/shots/quality.png", fullPage: false });
+const r = await p.evaluate(async () => (await fetch("/api/care/diagnose?lang=hinglish")).json()); console.log(r.used_ai, r.found, r.fix.map(f => f.title));
+console.log("errors", errs); await b.close(); })();
