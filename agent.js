@@ -122,7 +122,7 @@ const AGENT_SCHEMA = {
   type: "OBJECT",
   properties: {
     topic: { type: "STRING", enum: TOPICS },
-    sip_id: { type: "STRING", enum: ["A", "B", "C", ""] },
+    sip_id: { type: "STRING", description: "A, B or C if the question is about one SIP; empty otherwise" },
     found: { type: "ARRAY", items: { type: "STRING" } },
     answer: { type: "STRING" },
     next: { type: "ARRAY", items: { type: "STRING" } },
