@@ -27,7 +27,7 @@ async function callGemini(env, input, task) {
   if (task.tools) body.tools = task.tools;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   let last = "";
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY }, body: JSON.stringify(body) });
     const t = await r.text();
     if (r.ok) {
@@ -40,7 +40,7 @@ async function callGemini(env, input, task) {
     }
     last = errText(r.status, t);
     if (r.status !== 429 && r.status < 500) break;
-    await new Promise(res => setTimeout(res, 2500));
+    await new Promise(res => setTimeout(res, r.status === 429 ? 6000 * (attempt + 1) : 2500));
   }
   throw new Error(last);
 }

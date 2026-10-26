@@ -287,6 +287,7 @@ function agentAllowedNumbers(st, message) {
   add(st.today); add(st.last_sip); add(st.next_sip);
   for (const s of st.sips) { [s.amount, s.day, s.min_sip, s.invested, s.value, s.value - s.invested, Math.abs(s.value - s.invested), s.units, s.nav, s.new_day, s.new_amount, s.exit_load, exitLoadOn(s, s.value), s.instalments.length, s.instalments.filter(i => i.status === "paid").length].forEach(add); s.instalments.forEach(i => add(i.date)); }
   const tot = st.sips.reduce((a, s) => ({ i: a.i + s.invested, v: a.v + s.value }), { i: 0, v: 0 }); [tot.i, tot.v, tot.v - tot.i, Math.abs(tot.v - tot.i)].forEach(add);
+  add(st.sips.reduce((a, s) => a + (s.new_amount || s.amount), 0)); add(st.sips.filter(s => s.status === "active").reduce((a, s) => a + s.amount, 0)); set.add("50"); // monthly total; "Nifty 50"
   st.redemptions.forEach(r => { add(r.amount); add(r.load); });
   const pct = (g, i) => { if (!i) return; const x = g / i * 100; [x.toFixed(2), x.toFixed(1), Math.abs(x).toFixed(2), Math.abs(x).toFixed(1), String(Math.round(Math.abs(x)))].forEach(v => set.add(v)); };
   pct(tot.v - tot.i, tot.i); for (const s of st.sips) pct(s.value - s.invested, s.invested);
