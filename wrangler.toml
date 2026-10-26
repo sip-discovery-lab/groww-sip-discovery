@@ -5,6 +5,11 @@ workers_dev = true
 # Keep variables set in the Cloudflare dashboard when GitHub deploys (the Gemini key is a Secret set only in Cloudflare).
 keep_vars = true
 
+# Run the Worker in the US so Gemini calls never come from a region Google blocks
+# (e.g. Indian visitors are sometimes routed via Hong Kong, which Gemini rejects).
+[placement]
+region = "aws:us-east-1"
+
 [vars]
 MODEL = "gemini-3.5-flash-lite"
 
