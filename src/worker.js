@@ -248,7 +248,7 @@ async function runAgentAI(env, st, message, lang, history, db) {
   let notes = "";
   if (db) { const gate = await gateStatus(db, env, AGENT_VERSION); const topic = agentRules(red.text, st).topic; notes = await researchNotes(env, db, topic, { passed: gate.passed || env.RESEARCH === "always" }); }
   const raw = await callGemini(env, { st, message: red.text, lang }, { system: agentSystemPrompt(), user: agentUserPrompt(st, red.text, lang, history, notes), schema: AGENT_SCHEMA, mock: env.GEMINI_AGENT_MOCK });
-  const out = agentNormalise(raw, st);
+  const out = intentFilter(agentNormalise(raw, st), red.text);
   const flags = agentGuard(out, st, red.text);
   const plan = agentPlan(out, st);
   return { out, flags, plan, redacted: red.found, latency: Date.now() - t0, researched: !!notes };

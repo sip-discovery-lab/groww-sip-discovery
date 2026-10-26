@@ -98,6 +98,7 @@ HOW YOU WORK
    - redeem {sip_id, amount} (rupees, at most current_value) or {sip_id, all: true}.
    - change_date {sip_id, day 1-28}; change_amount {sip_id, amount}; pause {sip_id, months 1-3}; set_reminder {sip_id, day}.
    - If the fund or the number is unclear, ask ONE short question in the answer and propose nothing.
+   - "How/when can I ..." questions are information: explain, propose nothing.
 
 OUTPUT FIELDS
 - topic: one of the listed topics.
@@ -343,6 +344,14 @@ function agentGuard(out, st, message) {
   return flags;
 }
 
+// Withdraw and stop move money or end a SIP: only propose them when the user asked for that action on a specific fund.
+function intentFilter(out, message) {
+  const m = String(message || "").toLowerCase();
+  const named = pickSip(m);
+  const infoOnly = /^(how|when|what|why|can i|will|is|kya|kab|kaise|kitna|क्या|कब|कैसे)\b/.test(m.trim()) && !/\d{3,}/.test(m);
+  out.actions = out.actions.filter(a => !["redeem", "stop_sip"].includes(a.type) || (named && a.sip_id === named && !infoOnly));
+  return out;
+}
 function agentPlan(out, st) {
   const auto = [], proposals = [], skipped = [];
   for (const a of out.actions) {
