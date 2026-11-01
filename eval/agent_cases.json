@@ -47,7 +47,8 @@
   "topic": [
    "payment_failed",
    "status",
-   "not_reflecting"
+   "not_reflecting",
+   "missed_instalment"
   ],
   "forbid": [
    "pay_now",
