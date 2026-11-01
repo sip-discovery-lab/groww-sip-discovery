@@ -236,7 +236,7 @@ const inr = n => (n < 0 ? "-" : "") + "₹" + Math.abs(Math.round(Number(n))).to
 const nth = n => n + (n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th");
 const hm = iso => { try { return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
 
-const S = { session: store.get("sipcare_session"), view: null, pending: [], gate: null, situations: [], chat: [], busy: false, work: 0, steps: [], lastFix: null, fbDone: store.get("sipcare_fb") === "1", lastTickAt: 0, nextTickMs: 12000, lang: store.get("sipcare_lang") || "en", seenObs: new Set() };
+const S = { session: store.get("sipcare_session"), view: null, pending: [], gate: null, situations: [], chat: [], busy: false, work: 0, steps: [], lastFix: null, fbDone: store.get("sipcare_fb") === "1", lastTickAt: 0, nextTickMs: 12000, lang: store.get("sipcare_lang") || "en", seenObs: new Set(), flowRes: {}, flowDone: {}, returnTo: "" };
 
 // What the user can pick in SIP Care (they can also type anything).
 const TOPICS = [
@@ -255,7 +255,7 @@ const TOPIC_LABEL = { payment_failed: "Payment", not_reflecting: "Not showing in
 const LINKS = { sip: ["calendar_month", (v, id) => `Open ${short(v, id)} SIP`, id => "sip/" + id], autopay: ["bolt", () => "Open AutoPay settings", id => "autopay/" + id], orders: ["receipt_long", () => "Open payments & orders", () => "orders"], support: ["help", () => "Open support", () => "support"], bank: ["wallet", () => "Open bank account", () => "bank"], withdraw: ["wallet", (v, id) => `Open withdraw (${short(v, id)})`, id => "withdraw/" + id], portfolio: ["pie_chart", () => "Open portfolio", () => "portfolio"] };
 const short = (v, id) => { const s = v && v.sips.find(x => x.id === id); return s ? s.fund.replace(/ Fund.*| \(Demo\)/g, "") : "this"; };
 const sipOf = id => S.view && S.view.sips.find(x => x.id === id);
-const KIND_ICON = { payment_failed: ["payments", "warn"], salary_in: ["wallet", "warn"], sip_debited: ["check_circle", "ok"], units_pending: ["visibility_off", "warn"], autopay_expired: ["bolt", "warn"], units_allotted: ["check_circle", "ok"], redemption_credited: ["wallet", "ok"], sip_stopped: ["block", "mutedc"], autopay_active: ["bolt", "ok"] };
+const KIND_ICON = { refunded: ["wallet", "ok"], payment_failed: ["payments", "warn"], salary_in: ["wallet", "warn"], sip_debited: ["check_circle", "ok"], units_pending: ["visibility_off", "warn"], autopay_expired: ["bolt", "warn"], units_allotted: ["check_circle", "ok"], redemption_credited: ["wallet", "ok"], sip_stopped: ["block", "mutedc"], autopay_active: ["bolt", "ok"] };
 
 function navBar() {
   const t = [["home", "Home", "home"], ["explore", "Explore", ""], ["calendar_today", "SIPs", "sips"], ["pie_chart", "Portfolio", "portfolio"], ["person", "Account", "bank"]];
@@ -321,7 +321,7 @@ function home() {
     <div class="sectionh"><h3>Your SIPs</h3><span class="muted">${v.sips.length} SIPs</span></div>
     ${v.sips.map(x => `<button class="rowbtn" data-go="sip/${x.id}">${fundRow(x)}</button>`).join("")}
     ${alertsCard()}
-    <details class="tester"><summary>${ic("flask")} For testers: try a situation</summary><p class="muted" style="margin:6px 0 10px">Start the demo again on the SIP date (the ${nth(26)}) with a different cause, or with no problem.</p><div style="display:flex;flex-direction:column;gap:8px">${[["sip_low_balance", "Payment fails: low balance"], ["sip_autopay", "Payment fails: AutoPay expired"], ["sip_bank_error", "Payment fails: bank error"], ["normal", "No problem: a normal account"]].map(([k, l]) => `<button class="btn sec" style="height:40px" data-restart="${k}">${l}</button>`).join("")}<button class="btn ghost" style="height:40px" data-sit="units_pending">Also try: money debited, units not showing</button></div></details>
+    <details class="tester"><summary>${ic("flask")} For testers: try a situation</summary><p class="muted" style="margin:6px 0 10px">Every visit or refresh shows a different payment problem. To pick one, start the demo again on the SIP date (the ${nth(26)}) with:</p><div style="display:flex;flex-direction:column;gap:8px">${S.situations.filter(x => x.id.startsWith("sip_")).map(x => [x.id === "sip_ok" ? "normal" : x.id, x.label]).map(([k, l]) => `<button class="btn sec" style="height:40px" data-restart="${k}">${l}</button>`).join("")}<button class="btn ghost" style="height:40px" data-sit="units_pending">Also try: money debited, units not showing</button></div></details>
     <div class="card" style="background:var(--subtle);border:0"><div class="row" style="align-items:flex-start">${ic("health_and_safety")}<div><div style="font-weight:600;font-size:14px">How SIP Care works</div><div class="muted" style="margin-top:2px">You ask, SIP Care checks your SIPs, payments and orders plus the SIP rules, and answers for you. It does safe steps itself (track an order, set a reminder, draft a support message) and asks you before anything that moves money or changes a SIP. It keeps checking in the background and tells you when things finish.</div></div></div></div>
     <div class="foot"><a class="link" href="/quality" target="_blank" rel="noopener">How SIP Care is tested</a><button class="link" data-act="reset">Restart demo</button></div>
     <p class="muted" style="text-align:center;margin:0">Concept prototype for a Groww case study · not an official Groww product · demo data · not investment advice</p>
@@ -363,7 +363,7 @@ function optionsBlock(o) {
   const opt = (act, icon, title, sub, rec) => `<button class="topic" style="width:100%;${rec ? "border-color:var(--green);background:var(--green-bg)" : ""}" data-opt="${act}" data-sip="${s.id}"><span class="oi">${ic(icon)}</span><span style="flex:1;text-align:left"><span style="display:flex;gap:6px;align-items:center">${title}${rec ? '<span class="aitag">Recommended</span>' : ""}</span><span class="muted" style="display:block;font-weight:400">${sub}</span></span>${ic("arrow_forward", "chev")}</button>`;
   return `<section class="an needs"><h4>${ic("auto_fix_high")} What would you like to do?</h4><p class="muted" style="margin:0 0 10px">SIP Care recommends checking your options before deciding. Pick one and it will guide you.</p>
     <div style="display:flex;flex-direction:column;gap:8px">
-    ${opt("fix", "task_alt", o.kind === "salary_in" ? `Pay the missed ${inr(s.amount)} now` : "Keep my SIP going", "SIP Care finds what went wrong and sets up the fix", true)}
+    ${opt("fix", "task_alt", "Keep my SIP going", o.reason === "debited_not_allotted" ? "SIP Care tracks the order and sorts out the refund" : "SIP Care finds what went wrong and sets up the fix", true)}
     ${opt("pause", "pause_circle", "Take a break", "Pause this SIP for 1-3 months; it restarts by itself", false)}
     ${opt("cancel", "block", "Cancel this SIP", "Tell SIP Care why first; your invested money stays yours", false)}
     ${opt("ask", "help", "Ask something else", "Is my money safe, when will it grow, anything", false)}
@@ -383,6 +383,47 @@ async function proposeAndConfirm(a) {
   S.pending = r.pending; S.view = r.view; render(); openConfirm([r.proposal.id]);
 }
 
+// ---------------- GUIDED FLOWS: the result shows on its own screen, not in the chat ----------------
+async function runFlow(flow) {
+  const key = flow.kind + ":" + flow.sip_id;
+  S.flowRes[key] = { loading: true, flow }; S.work = 0; render();
+  const timer = setInterval(() => { if (S.work < 2) { S.work++; const w = document.querySelector(".work"); if (w) w.outerHTML = workBox(); } }, 700);
+  const r = await post("/api/agent/message", { session_id: S.session, flow, lang: S.lang });
+  clearInterval(timer);
+  S.flowRes[key] = r.ok ? r : { error: r.error || "Something went wrong.", flow };
+  if (r.ok) { S.pending = r.pending; S.view = r.view; }
+  render();
+}
+function stepList(r, key) {
+  const steps = [];
+  (r.done || []).forEach(d => steps.push(`<div class="step"><span class="b">${ic("check")}</span><div><b style="font-size:14px">${esc(d)}</b><div class="muted">Done automatically</div></div></div>`));
+  (r.proposals || []).forEach((p, i) => { const live = S.pending.some(x => x.id === p.id); const st = (S.flowDone[p.id]); steps.push(`<div class="prop ${p.danger ? "danger" : ""}" style="${p.danger ? "" : ""}"><div class="t">${p.danger ? "" : `Step ${i + 1}: `}${esc(p.title)}</div><div class="s">${esc(p.summary)}</div>${live ? `<div class="row" style="gap:8px;margin-top:10px"><button class="btn ${p.danger ? "sec" : ""}" style="height:38px" data-confirm="${p.id}">${p.danger ? "Cancel anyway" : "Do this"}</button>${p.danger ? "" : `<button class="btn ghost" style="height:38px;width:auto;padding:0 12px" data-decline="${p.id}">Not now</button>`}</div>` : `<div class="muted" style="margin-top:6px">${st === "declined" ? "Not done" : "✓ Done"}</div>`}</div>`); });
+  return steps.join("");
+}
+function linkBtns(r) { return (r.links || []).length ? `<div class="fups">${r.links.map(l => { const L = LINKS[l.to]; return L ? `<button data-go="${L[2](l.sip_id)}" style="display:inline-flex;gap:4px;align-items:center">${ic(L[0])}${esc(L[1](S.view, l.sip_id))} →</button>` : ""; }).join("")}</div>` : ""; }
+function flowResult(r) {
+  if (!r) return "";
+  if (r.loading) return workBox();
+  if (r.error) return `<div class="notice">${esc(r.error)}</div>`;
+  return `${r.notice ? `<div class="notice">${esc(r.notice)}</div>` : ""}
+    ${(r.found || []).length ? `<section class="an"><h4>${ic("analytics")} What SIP Care checked</h4><ul>${r.found.map(f => `<li>${esc(f)}</li>`).join("")}</ul></section>` : ""}
+    <section class="an"><h4>${ic("verified_user")} ${r.flow && r.flow.kind === "fix" ? "Why it failed and the fix" : "SIP Care's recommendation"} ${r.used_ai ? '<span class="aitag">AI</span>' : '<span class="stdtag">Standard</span>'}</h4><p>${esc(r.answer)}</p></section>
+    ${(r.done || []).length || (r.proposals || []).length ? `<section class="an needs"><h4>${ic("task_alt")} ${r.flow && r.flow.kind === "fix" ? "SIP Care's plan" : "Your options"}</h4><p class="muted" style="margin:0 0 10px">Each step opens or runs in its own place in the app. Nothing that moves money or changes your SIP happens until you confirm.</p><div class="steps" style="gap:10px">${stepList(r)}</div></section>` : ""}
+    ${(r.next || []).length ? `<section class="an"><h4>${ic("schedule")} What happens next</h4><ul>${r.next.map(f => `<li>${esc(f)}</li>`).join("")}</ul></section>` : ""}
+    ${linkBtns(r)}
+    <button class="link" data-go="care">${ic("help")} Have a question? Ask SIP Care</button>`;
+}
+function fixScreen(id) {
+  const v = S.view; const s = sipOf(id); if (!v || !s) return loading();
+  const o = v.observations.find(x => x.kind === "payment_failed" && x.sip_id === id);
+  return `${topInner(`Fix this payment <span class="aitag">AI agent</span>`)}
+  <main>
+    <div><div class="row" style="gap:6px">${o && o.status === "resolved" ? `<span class="chip ok">${ic("check_circle")}Resolved</span>` : o && o.status === "in_progress" ? `<span class="chip info">${ic("schedule")}Being fixed</span>` : '<span class="chip warn">Payment failed</span>'}<span class="muted" style="font-size:12px">${esc(o ? o.at_day : "")}</span></div>
+      <h2 style="margin-top:8px">${esc(o ? o.title : "Payment issue")}</h2><div class="muted">${esc(s.fund)} · ${inr(s.amount)} a month</div></div>
+    ${flowResult(S.flowRes["fix:" + id])}
+  </main>${navBar()}`;
+}
+
 // ---------------- CANCEL: SIP Care asks why first ----------------
 function cancelScreen(id) {
   const v = S.view; const s = sipOf(id); if (!v || !s) return loading();
@@ -399,6 +440,7 @@ function cancelScreen(id) {
       <div class="muted" style="font-size:11px">Don't share PAN, account numbers or OTP.</div></div>
     <button class="btn" id="crGo" disabled>See SIP Care's recommendation ${ic("arrow_forward")}</button>
     <button class="btn ghost" id="crSkip">Skip and cancel now</button>
+    <div id="crRes">${flowResult(S.flowRes["cancel_reason:" + id])}</div>
   </main>${navBar()}`;
 }
 
@@ -412,7 +454,7 @@ function sipPage(id) {
   const failed = s.instalments.find(i => i.status === "failed");
   return page(esc(short(S.view, id)) + " SIP", `
     <div><h2>${esc(s.fund)}</h2><div class="muted">${esc(s.category)} · ${esc(s.plan)}</div></div>
-    ${failed ? `<div class="card issue"><b style="color:var(--amber)">${inr(failed.amount)} on ${esc(failed.date)} not paid</b><div class="muted" style="margin-top:4px">${esc(failed.bank_message || "")}</div><button class="btn" style="margin-top:10px;height:40px" data-opt="fix" data-sip="${id}">${ic("shield_with_heart")} Fix with SIP Care</button></div>` : ""}
+    ${failed ? `<div class="card issue"><b style="color:var(--amber)">${inr(failed.amount)} on ${esc(failed.date)} not paid</b><div class="muted" style="margin-top:4px">${esc(failed.bank_message || "")}</div><div class="row" style="gap:8px;margin-top:10px">${failed.reason !== "debited_not_allotted" || failed.refunded ? `<button class="btn" style="height:40px" data-page="pay" data-sip="${id}">Pay ${inr(failed.amount)} now</button>` : ""}<button class="btn sec" style="height:40px" data-opt="fix" data-sip="${id}">${ic("shield_with_heart")} Fix with SIP Care</button></div></div>` : ""}
     ${kv([["Status", esc(s.label)], ["Amount", inr(s.amount) + " monthly"], ["SIP date", nth(s.day) + " of every month"], ["Next instalment", esc(s.next)], ["AutoPay", esc(s.autopay.replace("_", " "))], ["Invested", inr(s.invested)], ["Current value", inr(s.value)], ["Units", s.units], ["Exit load", esc(s.exit_note)]])}
     <div class="card"><h3>Change this SIP</h3><p class="muted" style="margin:2px 0 10px">Every change needs your Confirm.</p>
       <div class="row" style="gap:8px"><select id="newDay" style="flex:1;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--subtle);color:var(--ink);font:inherit;padding:0 8px">${Array.from({ length: 28 }, (_, k) => k + 1).map(d => `<option value="${d}" ${d === s.day ? "selected" : ""}>${nth(d)}</option>`).join("")}</select><button class="btn sec" style="width:auto;padding:0 14px;height:42px" data-page="date" data-sip="${id}">Change date</button></div>
@@ -426,17 +468,18 @@ function sipPage(id) {
 }
 function autopayPage(id) {
   const s = sipOf(id); if (!s) return loading();
-  const ok = s.autopay === "active";
+  const low = s.mandate_limit && s.mandate_limit < s.amount;
+  const ok = s.autopay === "active" && !low;
   return page("AutoPay", `<div><h2>AutoPay · ${esc(short(S.view, id))}</h2></div>
-    <div class="card ${ok ? "success" : "issue"}"><b>${ok ? "AutoPay is active" : s.autopay === "pending_approval" ? "Waiting for your approval in your UPI app" : "AutoPay is not active"}</b><div class="muted" style="margin-top:4px">${ok ? `${inr(s.amount)} is debited automatically on the ${nth(s.day)}.` : "Instalments won't be debited automatically until AutoPay is active."}</div></div>
-    ${kv([["Bank", esc(S.view.bank)], ["Amount", inr(s.amount)], ["Debit date", nth(s.day) + " of every month"]])}
-    ${!ok && s.autopay !== "pending_approval" ? `<button class="btn" data-page="autopay" data-sip="${id}">${ic("bolt")} Set up AutoPay again</button><p class="muted" style="margin:0">You'll approve it in your UPI or bank app; it usually becomes active in 2-7 days.</p>` : ""}`);
+    <div class="card ${ok ? "success" : "issue"}"><b>${ok ? "AutoPay is active" : s.autopay === "pending_approval" ? "Waiting for your approval in your UPI app" : low ? "AutoPay limit is lower than your SIP amount" : s.autopay === "not_approved" ? "AutoPay was never approved" : s.autopay === "cancelled" ? "AutoPay was cancelled from your bank app" : "AutoPay has expired"}</b><div class="muted" style="margin-top:4px">${ok ? `${inr(s.amount)} is debited automatically on the ${nth(s.day)}.` : low ? `Your SIP is ${inr(s.amount)} but AutoPay can collect up to ${inr(s.mandate_limit)}.` : "Instalments won't be debited automatically until AutoPay is active."}</div></div>
+    ${kv([["Bank", esc(S.view.bank)], ["SIP amount", inr(s.amount)], ["AutoPay limit", s.mandate_limit ? inr(s.mandate_limit) : inr(s.amount)], ["Debit date", nth(s.day) + " of every month"], ["Status", esc(String(s.autopay).replace(/_/g, " "))]])}
+    ${!ok && s.autopay !== "pending_approval" ? `<button class="btn" data-page="autopay" data-sip="${id}" data-limit="${s.amount}">${ic("bolt")} ${low ? `Raise limit to ${inr(s.amount)}` : "Set up AutoPay again"}</button><p class="muted" style="margin:0">You'll approve it in your UPI or bank app; it usually becomes active in 2-7 days.</p>` : ""}`);
 }
 function ordersPage() {
   const v = S.view; const rows = [];
   v.sips.forEach(s => s.instalments.forEach(i => rows.push(Object.assign({ fund: s.fund, sip_id: s.id }, i))));
   rows.sort((a, b) => new Date(b.date) - new Date(a.date));
-  return page("Payments & orders", rows.slice(0, 24).map(i => `<div class="fund" style="align-items:flex-start"><div class="fi">${esc(i.fund[0])}</div><div style="flex:1"><div class="row" style="justify-content:space-between"><b style="font-size:14px">${esc(i.fund)}</b><b>${inr(i.amount)}</b></div><div class="row" style="justify-content:space-between;margin-top:4px"><span class="muted">${esc(i.date)}</span>${instRow(i).match(/<span class="chip[^]*?<\/span>/)[0]}</div>${i.status === "failed" ? `<div class="muted" style="margin-top:4px">${esc(i.bank_message || "")}</div><button class="btn sec" style="height:36px;margin-top:8px" data-opt="fix" data-sip="${i.sip_id}">Fix with SIP Care</button>` : ""}</div></div>`).join("") || '<p class="muted">No orders yet.</p>');
+  return page("Payments & orders", rows.slice(0, 24).map(i => `<div class="fund" style="align-items:flex-start"><div class="fi">${esc(i.fund[0])}</div><div style="flex:1"><div class="row" style="justify-content:space-between"><b style="font-size:14px">${esc(i.fund)}</b><b>${inr(i.amount)}</b></div><div class="row" style="justify-content:space-between;margin-top:4px"><span class="muted">${esc(i.date)}</span>${instRow(i).match(/<span class="chip[^]*?<\/span>/)[0]}</div>${i.status === "failed" ? `<div class="muted" style="margin-top:4px">${esc(i.bank_message || "")}</div><div class="row" style="gap:8px;margin-top:8px">${i.reason !== "debited_not_allotted" || i.refunded ? `<button class="btn" style="height:36px" data-page="pay" data-sip="${i.sip_id}">Pay now</button>` : `<span class="chip info">Refund or confirmation pending</span>`}<button class="btn sec" style="height:36px" data-opt="fix" data-sip="${i.sip_id}">Fix with SIP Care</button></div>` : ""}</div></div>`).join("") || '<p class="muted">No orders yet.</p>');
 }
 function supportPage() {
   const v = S.view; const d = (v.drafts || [])[0];
@@ -451,8 +494,8 @@ function supportPage() {
 function bankPage() {
   const v = S.view;
   return page("Account", `<div><h2>${esc(v.user)}</h2><div class="muted">Demo account</div></div>
-    ${kv([["Bank account", esc(v.bank)], ["Balance (demo)", inr(v.balance)], ["Salary usually arrives", nth(v.salary_day) + " of the month"], ["SIP date", nth(26) + " of the month"]])}
-    <div class="card" style="background:var(--subtle);border:0"><div class="muted">SIP Care compares your balance and salary day with your SIP dates to spot payments that may fail.</div></div>`);
+    ${kv([["Linked bank account", esc(v.bank)], ["SIP date", nth(26) + " of the month"]].concat(v.sips.map(s => ["AutoPay · " + short(v, s.id), esc(String(s.autopay).replace(/_/g, " "))])))}
+    <div class="card" style="background:var(--subtle);border:0"><div class="muted">SIP Care only sees what this app knows: your SIPs, orders, AutoPay status and the bank's reply to each debit. It can't see your bank balance, salary or other apps.</div></div>`);
 }
 function withdrawPage(id) {
   const s = sipOf(id); if (!s) return loading();
@@ -545,6 +588,7 @@ function openConfirm(ids) {
     close();
     if (!r.ok) { toast({ title: "Couldn't complete that", notify: r.error || "Please try again." }); return; }
     S.chat.forEach(it => { if (it.kind === "answer") chosen.forEach(id => { it.states = it.states || {}; it.states[id] = "done"; }); });
+    chosen.forEach(id => { S.flowDone[id] = "done"; }); S.returnTo = screen;
     S.pending = r.pending; S.view = r.view; S.steps = r.steps; S.lastFix = r.home_message;
     (r.failed || []).forEach(f => toast({ title: "Not possible", notify: `${f.title}: ${f.why}` }));
     go("fixing");
@@ -564,7 +608,7 @@ function runSteps() {
   const t = setInterval(() => {
     if (!$("#steps")) { clearInterval(t); return; }
     if (n < S.steps.length) { $("#steps").insertAdjacentHTML("beforeend", `<div class="step"><span class="b">${ic("check")}</span><div style="font-size:14px;font-weight:500">${esc(S.steps[n])}</div></div>`); n++; $("#cnt").textContent = `${n} / ${S.steps.length} complete`; }
-    else { clearInterval(t); $("#doneBox").classList.remove("hidden"); $("#toHome").onclick = () => go("home"); $("#toCare").onclick = () => go("care"); }
+    else { clearInterval(t); $("#doneBox").classList.remove("hidden"); const back = S.returnTo && S.returnTo !== "fixing" ? S.returnTo : ""; $("#toHome").onclick = () => go(back || "home"); if (back) $("#toHome").innerHTML = `Continue ${ic("arrow_forward")}`; $("#toCare").onclick = () => go("home"); $("#toCare").textContent = "Back to Home"; }
   }, 450);
 }
 
@@ -602,11 +646,15 @@ async function enableAlerts() {
 // ---------------- data + loop ----------------
 function apply(r) { if (!r || !r.ok) return; S.view = r.view; S.pending = r.pending || []; if (r.gate) S.gate = r.gate; if (r.situations) S.situations = r.situations; if (r.next_tick_ms) S.nextTickMs = r.next_tick_ms; }
 const DEMO = (new URLSearchParams(location.search).get("demo") || "").replace(/-/g, "_");
+const CAUSES = ["sip_low_balance", "sip_autopay", "sip_not_approved", "sip_mandate_limit", "sip_mandate_cancelled", "sip_bank_error", "sip_debited"];
+// Each visit or refresh shows a different payment problem (never the same one twice in a row).
+function nextCause() { const last = store.get("sipcare_last_cause"); const pool = CAUSES.filter(c => c !== last); const c = pool[Math.floor(Math.random() * pool.length)]; store.set("sipcare_last_cause", c); return c; }
 async function start(reset, scenario) {
-  const r = await post("/api/agent/start", { session_id: reset ? "" : S.session, reset: !!reset, lang: S.lang, scenario: scenario || (DEMO === "normal" ? "normal" : DEMO ? "sip_" + DEMO.replace(/^sip_/, "") : undefined) });
+  const sc = scenario || (DEMO === "normal" ? "normal" : DEMO ? "sip_" + DEMO.replace(/^sip_/, "") : reset ? nextCause() : undefined);
+  const r = await post("/api/agent/start", { session_id: reset ? "" : S.session, reset: !!reset, lang: S.lang, scenario: sc });
   if (!r.ok) { $("#app").innerHTML = `<main><div class="notice" style="margin-top:20px">${esc(r.error || "Can't load the demo.")}</div></main>`; return false; }
   S.session = r.session_id; store.set("sipcare_session", r.session_id);
-  if (reset) { S.chat = []; S.lastFix = null; S.fbDone = false; store.set("sipcare_fb", "0"); S.seenObs = new Set(); }
+  if (reset) { $("#toasts").innerHTML = ""; S.flowRes = {}; S.flowDone = {}; S.chat = []; S.lastFix = null; S.fbDone = false; store.set("sipcare_fb", "0"); S.seenObs = new Set(); }
   apply(r); S.lastTickAt = Date.now();
   (r.view.observations || []).forEach(o => { if (!(r.fresh || []).some(f => f.id === o.id)) S.seenObs.add(o.id); });
   setTimeout(() => announce(r.fresh), 400);
@@ -622,7 +670,7 @@ async function tick(force) {
   if (!hadSheet && !typing && screen !== "fixing" && !S.busy) render();
 }
 setInterval(() => { if (S.view && S.view.autoplay && Date.now() - S.lastTickAt >= S.nextTickMs) tick(false); }, 2000);
-const ROUTES = /^(home|care|inbox|sips|orders|support|bank|portfolio|(note|sip|autopay|withdraw|cancel)\/[\w]+)$/;
+const ROUTES = /^(home|care|inbox|sips|orders|support|bank|portfolio|(note|sip|autopay|withdraw|cancel|fix)\/[\w]+)$/;
 window.addEventListener("hashchange", () => { const h = location.hash.replace(/^#\//, "") || "home"; if (h !== screen && S.view && ROUTES.test(h)) go(h); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.view && S.view.autoplay) tick(false); });
 
@@ -658,7 +706,7 @@ function scrollEnd() { setTimeout(() => window.scrollTo({ top: document.body.scr
 function render() {
   const s = screen;
   const [a, id] = s.split("/");
-  $("#app").innerHTML = !S.view && s !== "home" ? loading() : s === "care" ? care() : s === "fixing" ? fixing() : s === "inbox" ? inbox() : a === "note" ? noteScreen(id) : a === "cancel" ? cancelScreen(id) : s === "sips" ? sipsPage() : a === "sip" ? sipPage(id) : a === "autopay" ? autopayPage(id) : s === "orders" ? ordersPage() : s === "support" ? supportPage() : s === "bank" ? bankPage() : a === "withdraw" ? withdrawPage(id) : home();
+  $("#app").innerHTML = !S.view && s !== "home" ? loading() : s === "care" ? care() : s === "fixing" ? fixing() : s === "inbox" ? inbox() : a === "note" ? noteScreen(id) : a === "cancel" ? cancelScreen(id) : a === "fix" ? fixScreen(id) : s === "sips" ? sipsPage() : a === "sip" ? sipPage(id) : a === "autopay" ? autopayPage(id) : s === "orders" ? ordersPage() : s === "support" ? supportPage() : s === "bank" ? bankPage() : a === "withdraw" ? withdrawPage(id) : home();
   wire();
 }
 function wire() {
@@ -668,7 +716,7 @@ function wire() {
   document.querySelectorAll("[data-ask]").forEach(b => b.onclick = () => send(b.dataset.ask));
   document.querySelectorAll("[data-opt]").forEach(b => b.onclick = () => {
     const id = b.dataset.sip, s = sipOf(id), o = b.dataset.opt;
-    if (o === "fix") send("", { kind: "fix", sip_id: id }, `Keep my ${short(S.view, id)} SIP going. Fix the failed payment.`);
+    if (o === "fix") { go("fix/" + id); runFlow({ kind: "fix", sip_id: id }); }
     if (o === "pause") pauseSheet(id);
     if (o === "cancel") go("cancel/" + id);
     if (o === "ask") { S.chat = []; go("care"); }
@@ -677,7 +725,9 @@ function wire() {
   document.querySelectorAll('input[name="cr"]').forEach(x => x.onchange = () => { $("#crGo").disabled = false; });
   if ($("#crGo")) {
     const id = screen.split("/")[1];
-    $("#crGo").onclick = () => { const r = document.querySelector('input[name="cr"]:checked'); if (!r) return; const text = $("#crText").value.trim(); send("", { kind: "cancel_reason", sip_id: id, reason: r.value, text }, `Cancel my ${short(S.view, id)} SIP. Reason: ${S.view.cancel_reasons[r.value]}${text ? " — " + text : ""}`); };
+    const res = S.flowRes["cancel_reason:" + id];
+    if (res && res.flow) { const x = document.querySelector(`input[name="cr"][value="${res.flow.reason}"]`); if (x) { x.checked = true; $("#crGo").disabled = false; } if (res.flow.text && !$("#crText").value) $("#crText").value = res.flow.text; }
+    $("#crGo").onclick = async () => { const r = document.querySelector('input[name="cr"]:checked'); if (!r) return; const text = $("#crText").value.trim(); await runFlow({ kind: "cancel_reason", sip_id: id, reason: r.value, text }); const el = $("#crRes"); if (el) el.scrollIntoView({ behavior: "smooth" }); };
     $("#crSkip").onclick = () => proposeAndConfirm({ type: "stop_sip", sip_id: id });
   }
   document.querySelectorAll("[data-page]").forEach(b => b.onclick = () => {
@@ -686,7 +736,8 @@ function wire() {
     if (k === "amount") proposeAndConfirm({ type: "change_amount", sip_id: id, amount: +$("#newAmt").value });
     if (k === "skip") proposeAndConfirm({ type: "skip_next", sip_id: id });
     if (k === "resume") proposeAndConfirm({ type: "resume", sip_id: id });
-    if (k === "autopay") proposeAndConfirm({ type: "setup_autopay", sip_id: id });
+    if (k === "autopay") proposeAndConfirm({ type: "setup_autopay", sip_id: id, limit: +b.dataset.limit || undefined });
+    if (k === "pay") proposeAndConfirm({ type: "pay_now", sip_id: id });
     if (k === "withdraw") proposeAndConfirm({ type: "redeem", sip_id: id, amount: +$("#wdAmt").value });
     if (k === "withdraw_all") proposeAndConfirm({ type: "redeem", sip_id: id, all: true });
     if (k === "ticket") proposeAndConfirm({ type: "send_ticket", sip_id: $("#tkSip").value, subject: $("#tkSub").value || "Support request", body: $("#tkBody").value });
@@ -703,7 +754,7 @@ function wire() {
   document.querySelectorAll("[data-chip]").forEach(b => b.onclick = () => send(b.dataset.chip));
   document.querySelectorAll("[data-lang]").forEach(b => b.onclick = async () => { S.lang = b.dataset.lang; store.set("sipcare_lang", S.lang); apply(await post("/api/agent/settings", { session_id: S.session, lang: S.lang })); render(); });
   document.querySelectorAll("[data-confirm]").forEach(b => b.onclick = () => openConfirm([b.dataset.confirm]));
-  document.querySelectorAll("[data-decline]").forEach(b => b.onclick = async () => { const id = b.dataset.decline; const r = await post("/api/agent/decline", { session_id: S.session, proposal_id: id }); if (r.ok) { S.pending = r.pending; if (r.view) S.view = r.view; S.chat.forEach(it => { if (it.kind === "answer") { it.states = it.states || {}; if ((it.r.proposals || []).some(p => p.id === id)) it.states[id] = "declined"; } }); render(); } });
+  document.querySelectorAll("[data-decline]").forEach(b => b.onclick = async () => { const id = b.dataset.decline; const r = await post("/api/agent/decline", { session_id: S.session, proposal_id: id }); if (r.ok) { S.pending = r.pending; if (r.view) S.view = r.view; S.chat.forEach(it => { if (it.kind === "answer") { it.states = it.states || {}; if ((it.r.proposals || []).some(p => p.id === id)) it.states[id] = "declined"; } }); S.flowDone[id] = "declined"; render(); } });
   const f = $("#ask"); if (f) f.onsubmit = e => { e.preventDefault(); const q = $("#q").value.trim(); if (q) { $("#q").value = ""; send(q); } };
   const fb = {}; document.querySelectorAll("#fb [data-k]").forEach(b => b.onclick = () => { fb[b.dataset.k] = b.dataset.v; document.querySelectorAll(`#fb [data-k="${b.dataset.k}"]`).forEach(x => x.setAttribute("aria-pressed", x === b)); });
   const fs = $("#fbSend"); if (fs) fs.onclick = async () => { if (!fb.understood || !fb.fixed || !fb.clarity) { $("#fbMsg").textContent = "Please answer all three."; return; } const r = await post("/api/agent/feedback", Object.assign({ session_id: S.session }, fb)); if (r.ok) { S.fbDone = true; store.set("sipcare_fb", "1"); render(); } else $("#fbMsg").textContent = r.error || "Couldn't save."; };
@@ -712,7 +763,9 @@ function wire() {
 (async () => {
   render();
   if ("serviceWorker" in navigator && store.get("sipcare_push") === "1") navigator.serviceWorker.register("/sw.js").catch(() => {});
-  if (await start(false)) { const h = location.hash.replace(/^#\//, ""); screen = ROUTES.test(h) && h !== "portfolio" ? h : "home"; render(); }
+  const h0 = location.hash.replace(/^#\//, "");
+  // A fresh visit or refresh starts a new demo on the SIP date with a new problem; opening from a notification keeps the session.
+  if (await start(!h0.startsWith("note/"))) { screen = h0.startsWith("note/") && ROUTES.test(h0) ? h0 : "home"; try { history.replaceState(null, "", location.pathname + location.search + (screen === "home" ? "#/" : "#/" + screen)); } catch (e) {} render(); }
 })();
 </script>
 

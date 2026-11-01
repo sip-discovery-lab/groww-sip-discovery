@@ -1,7 +1,7 @@
 // SIP Care agent (v3): the user asks anything about their SIPs; the agent reads the account,
 // checks SIP rules and platform guidelines, answers with evidence, does safe steps itself,
 // and asks the user to confirm anything that moves money or changes a SIP.
-const AGENT_VERSION = "agent-v4";
+const AGENT_VERSION = "agent-v5";
 const AGENT_LANGS = ["en", "hinglish", "hi"];
 
 const AUTO_ACTIONS = ["track_order", "set_reminder", "draft_ticket"];
@@ -21,11 +21,18 @@ const CANCEL_REASONS = {
 };
 // App pages SIP Care can send the user to.
 const LINK_TARGETS = ["sip", "autopay", "orders", "support", "bank", "withdraw", "portfolio"];
+// Why a SIP payment failed, as the app learns it from the bank, the AutoPay (mandate) status or the order status.
+// The app cannot see bank balances, salary or other apps.
 const FAIL_REASONS = {
-  low_balance: "Insufficient balance in the bank account",
-  autopay_expired: "AutoPay mandate expired, so the bank did not process the debit",
-  bank_error: "Declined by the bank due to a technical error",
+  low_balance: "Bank declined the debit: insufficient funds",
+  autopay_expired: "AutoPay for this SIP has expired",
+  autopay_not_approved: "AutoPay request was never approved in your UPI or bank app",
+  mandate_limit: "SIP amount is higher than your AutoPay limit",
+  mandate_cancelled: "AutoPay was cancelled from your bank or UPI app",
+  bank_error: "Bank declined the debit due to a technical error",
+  debited_not_allotted: "Money was debited but the fund house did not confirm the order",
 };
+const FAIL_KEYS = Object.keys(FAIL_REASONS);
 
 // ---------- dates (India time) ----------
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -55,7 +62,7 @@ function demoState(nowMs) {
   const st = {
     user: "Riya", now: t, today: dlabel(t.d, t.m, t.y), today_day: t.d,
     last_sip: dlabel(SIP_DAY, last.m, last.y), next_sip: dlabel(SIP_DAY, next.m, next.y), next_sip_is_today: t.d === SIP_DAY,
-    bank: "Account ••12", balance: 42500, salary_day: 1, lang: "en", autoplay: true, last_tick: 0, ended: false, clock: 0,
+    bank: "Account ••12", lang: "en", autoplay: true, last_tick: 0, ended: false, clock: 0,
     sips: [
       mk("A", "Bluechip Equity Fund (Demo)", "Direct Growth", "Large cap equity", 1000, 6, 51.24, 3.2, 500, 1, "1% if units are redeemed within 1 year of each instalment"),
       mk("B", "Flexi Cap Fund (Demo)", "Direct Growth", "Flexi cap equity", 2000, 4, 78.10, -1.1, 500, 1, "1% if units are redeemed within 1 year of each instalment"),
@@ -79,8 +86,8 @@ function findIssues(st) {
 
 function snapshot(st) {
   return {
-    today: st.today, last_instalment_date: st.last_sip, next_instalment_date: st.next_sip, bank: st.bank, bank_balance_demo: st.balance, salary_usually_arrives_on: nth(st.salary_day),
-    sips: st.sips.map(s => ({ id: s.id, fund: s.fund, plan: s.plan, category: s.category, monthly_amount: s.amount, sip_date: nth(s.day), status: s.status, autopay: s.autopay, started: s.started,
+    today: st.today, last_instalment_date: st.last_sip, next_instalment_date: st.next_sip, bank: st.bank, note: "The app cannot see the user's bank balance, salary or other apps.",
+    sips: st.sips.map(s => ({ id: s.id, fund: s.fund, plan: s.plan, category: s.category, monthly_amount: s.amount, sip_date: nth(s.day), status: s.status, autopay: s.autopay, autopay_limit: s.mandate_limit || null, started: s.started,
       instalments_paid: s.instalments.filter(i => i.status === "paid").length, last_instalments: s.instalments.slice(-3), invested: s.invested, current_value: s.value, gain: s.value - s.invested, units: s.units, nav: s.nav,
       exit_load: s.exit_note, lock_in: s.lock_in, min_sip: s.min_sip, order: s.order, skip_next: s.skip_next, new_date_from_next_cycle: s.new_day, new_amount_from_next_cycle: s.new_amount })),
     redemptions: st.redemptions.map(r => ({ sip_id: r.sip_id, amount: r.amount, status: r.status })),
@@ -124,19 +131,20 @@ OUTPUT FIELDS
 - next: 0-3 short "what happens next" points (timelines, steps in the app).
 - followups: 2-3 short follow-up questions the user may tap next.
 - actions: as above.
-- links: 0-3 app pages that help the user act or decide: sip (SIP details: date, amount, skip, pause, cancel), autopay (AutoPay settings), orders (payments and orders), support (support ticket), bank (bank account and balance), withdraw (redeem from a fund), portfolio. Give sip_id for sip, autopay and withdraw.
+- links: 0-3 app pages that help the user act or decide: sip (SIP details: date, amount, skip, pause, cancel), autopay (AutoPay settings), orders (payments and orders), support (support ticket), bank (linked bank account), withdraw (redeem from a fund), portfolio. Give sip_id for sip, autopay and withdraw.
 
 GUIDED FLOWS (when a FLOW block is present)
-- fix: the user wants to KEEP their SIP after a failed payment. First detect the cause from the failed instalment (reason, bank message), the bank balance vs the instalment amount, the salary day and the AutoPay status. Then propose the best fix:
-  * balance short and can't pay now: set_reminder on the salary day (automatic) and change_date to 2 days after the salary day so future debits come after payday; say the missed instalment can be paid once salary arrives. Link bank and sip.
-  * balance now enough: pay_now for the missed instalment; if the balance was short because the date is before payday, also change_date. Link sip.
-  * AutoPay expired or not active: setup_autopay and pay_now (if balance allows). Link autopay.
+- fix: the user wants to KEEP their SIP after a failed payment. Detect the cause ONLY from what the app knows: the failed instalment's reason and bank message, the AutoPay status and limit, and the order status. You cannot see the bank balance, salary or other apps: never say what the balance is or when salary arrives. Then propose the fix using the app's own tools:
+  * insufficient funds: pay_now (they pay by UPI or net banking when the money is in their account) and set_reminder 2 days before the next SIP date (automatic). Suggest changing the SIP date to a day when their account usually has money and link sip; ask which date suits them (don't pick a date yourself).
+  * AutoPay expired, cancelled or never approved: setup_autopay and pay_now. Link autopay.
+  * AutoPay limit lower than the SIP amount: setup_autopay with limit = the SIP amount (or change_amount down to the limit if they prefer), and pay_now. Link autopay.
   * bank technical error: pay_now (retry) and send_ticket with a short factual message. Link orders and support.
+  * money debited but the order not confirmed: track_order (automatic) and send_ticket; explain the money is refunded in 5-7 business days if the order fails. Do NOT propose pay_now. Link orders and support.
   Never propose stop_sip or redeem in this flow.
 - cancel_reason: the user wants to CANCEL and told you why. Respond to that reason with care, no pressure, then recommend:
   * not seeing growth: explain with their own invested vs current value and number of instalments that early values move little because only a few instalments are invested; no promises. Offer continue (no action needed) or pause.
   * money tight: skip_next or pause (1-3 months) keeps the SIP alive.
-  * payment trouble: fix the cause (setup_autopay / change_date / pay_now).
+  * payment trouble: fix the cause with the app's tools (setup_autopay / pay_now / a date change they choose).
   * need money: they can withdraw only what they need without stopping (link withdraw); or stop.
   * doesn't understand: explain simply how SIPs work (units, NAV, long holding) with their numbers.
   ALWAYS also include stop_sip for that SIP last, so they can still cancel. Never guilt or pressure them.
@@ -144,6 +152,7 @@ GUIDED FLOWS (when a FLOW block is present)
 RULES (breaking any is a failure)
 - Never recommend, rank or compare funds (other than describing the user's own SIPs). Never suggest investing more, switching or selling as advice; act only on what the user asks.
 - Never predict returns, NAV or markets, and never give a date or number for future growth. For growth questions explain how value changes, show their invested vs current value from the account, and say no one can promise growth.
+- You cannot see the user's bank balance, salary, income or other apps. Never claim to know them.
 - Use only numbers and dates from the account, the guidelines or the user's message. Never invent fees, waivers, timings or percentages.
 - No fear or urgency words (immediately, urgent, hurry, last chance, you will lose, turant, jaldi).
 - Never ask for PAN, OTP, PIN, passwords, account numbers or screenshots. If the user shares one, tell them not to share it.
@@ -165,7 +174,7 @@ const AGENT_SCHEMA = {
     links: { type: "ARRAY", items: { type: "OBJECT", properties: { to: { type: "STRING", enum: LINK_TARGETS }, sip_id: { type: "STRING" } }, required: ["to"] } },
     actions: { type: "ARRAY", items: { type: "OBJECT", properties: {
       type: { type: "STRING", enum: ALL_ACTIONS }, sip_id: { type: "STRING", enum: ["A", "B", "C"] },
-      day: { type: "INTEGER" }, amount: { type: "INTEGER" }, all: { type: "BOOLEAN" }, months: { type: "INTEGER" }, subject: { type: "STRING" }, body: { type: "STRING" },
+      day: { type: "INTEGER" }, amount: { type: "INTEGER" }, limit: { type: "INTEGER" }, all: { type: "BOOLEAN" }, months: { type: "INTEGER" }, subject: { type: "STRING" }, body: { type: "STRING" },
     }, required: ["type", "sip_id"] } },
   },
   required: ["topic", "found", "answer", "actions"],
@@ -194,7 +203,7 @@ function validateAction(a, st) {
   if (!s) return "unknown SIP";
   if (s.status === "stopped" && !["draft_ticket", "send_ticket", "redeem"].includes(a.type)) return "this SIP is stopped";
   switch (a.type) {
-    case "pay_now": if (!failedInst(s)) return "there is no missed instalment to pay"; if (st.balance < s.amount) return `your balance is ${rupees(st.balance)}, below ${rupees(s.amount)}`; return "";
+    case "pay_now": { const f = failedInst(s); if (!f) return "there is no missed instalment to pay"; if (f.reason === "debited_not_allotted" && !f.refunded) return "the earlier payment is still being refunded or confirmed"; return ""; }
     case "redeem":
       if (s.value <= 0) return "nothing left to withdraw in this fund";
       if (a.all) return "";
@@ -207,7 +216,7 @@ function validateAction(a, st) {
     case "skip_next": if (s.skip_next) return "the next instalment is already skipped"; return "";
     case "pause": if (!(a.months >= 1 && a.months <= 3)) return "pause must be 1-3 months"; if (s.status === "paused") return "already paused"; return "";
     case "resume": if (s.status !== "paused") return "this SIP isn't paused"; return "";
-    case "setup_autopay": if (s.autopay === "active") return "AutoPay is already active"; if (s.autopay === "pending_approval") return "a new AutoPay request is already waiting for your approval"; return "";
+    case "setup_autopay": if (s.autopay === "active" && !(s.mandate_limit && s.mandate_limit < s.amount)) return "AutoPay is already active"; if (s.autopay === "pending_approval") return "a new AutoPay request is already waiting for your approval"; if (a.limit && a.limit < s.amount) return `the AutoPay limit must be at least ${rupees(s.amount)}`; return "";
     case "track_order": if (!s.order || s.order.status === "allotted") return "no order in progress"; if (s.order.tracking) return "already tracking"; return "";
     case "set_reminder": if (!(a.day >= 1 && a.day <= 31)) return "invalid reminder day"; return "";
     case "draft_ticket": case "send_ticket": return "";
@@ -219,7 +228,7 @@ function actionView(a, st) {
   const s = sipById(st, a.sip_id);
   const row = [["SIP", s.fund], ["Bank", st.bank]];
   switch (a.type) {
-    case "pay_now": { const f = failedInst(s); return { title: `Pay ${rupees(s.amount)} now`, summary: `Pay the missed ${f ? f.date : ""} instalment of ${rupees(s.amount)} from ${st.bank}.`, rows: [["Amount", rupees(s.amount)]].concat(row), note: "Units are bought at the NAV of the day the money reaches the fund.", step: `Paid ${rupees(s.amount)} for ${s.fund}; units on the way` }; }
+    case "pay_now": { const f = failedInst(s); return { title: `Pay ${rupees(s.amount)} now`, summary: `Pay the missed ${f ? f.date : ""} instalment of ${rupees(s.amount)} by UPI or net banking.`, rows: [["Amount", rupees(s.amount)], ["Pay with", "UPI or net banking"]].concat(row), note: "Make sure the amount is in your account. Units are bought at the NAV of the day the money reaches the fund.", step: `Paid ${rupees(s.amount)} for ${s.fund}; units on the way` }; }
     case "redeem": { const amt = a.all ? s.value : a.amount; const load = exitLoadOn(s, amt); return { title: a.all ? `Withdraw all (${rupees(amt)})` : `Withdraw ${rupees(amt)}`, summary: `Redeem ${a.all ? "all units" : rupees(amt)} from ${s.fund}. Money goes to ${st.bank}.`, rows: [["Amount", rupees(amt)], ["Exit load", load ? `about ${rupees(load)} (1%)` : "None"], ["Credited to", st.bank], ["Expected", "within 2 working days"], ["SIP", s.fund]], note: `${s.exit_note}. Tax applies only on gains when you redeem. Your SIP continues unless you stop it.`, step: `Placed a withdrawal of ${rupees(amt)} from ${s.fund}` }; }
     case "stop_sip": return { title: "Cancel this SIP", summary: `Stop future instalments of ${s.fund}.`, rows: row.concat([["Processed in", "up to 2 working days"]]), note: `Units you hold (${rupees(s.value)}) stay invested until you choose to withdraw. An instalment due in the next 2 working days may still be debited.`, step: `Requested to stop ${s.fund}`, danger: true };
     case "change_date": return { title: `Move SIP date to the ${nth(a.day)}`, summary: `From the next cycle, ${s.fund} will run on the ${nth(a.day)} instead of the ${nth(s.new_day || s.day)}.`, rows: [["Current date", nth(s.new_day || s.day)], ["New date", nth(a.day)]].concat(row), note: "", step: `Changed the SIP date to the ${nth(a.day)} from the next cycle` };
@@ -227,9 +236,9 @@ function actionView(a, st) {
     case "skip_next": return { title: "Skip the next instalment", summary: `Skip the ${st.next_sip} instalment of ${rupees(s.amount)}. Your SIP stays active.`, rows: [["Skipped", st.next_sip]].concat(row), note: "", step: `Skipped the ${st.next_sip} instalment; SIP stays active` };
     case "pause": return { title: `Pause for ${a.months} month${a.months > 1 ? "s" : ""}`, summary: `No instalments for ${a.months} month${a.months > 1 ? "s" : ""}, then your SIP restarts.`, rows: [["Pause", `${a.months} month${a.months > 1 ? "s" : ""}`]].concat(row), note: "Units you hold stay invested.", step: `Paused the SIP for ${a.months} month${a.months > 1 ? "s" : ""}` };
     case "resume": return { title: "Restart this SIP", summary: `Restart ${s.fund} from the next ${nth(s.day)}.`, rows: row, note: "", step: "Restarted the SIP" };
-    case "setup_autopay": return { title: "Set up AutoPay again", summary: `Send a new AutoPay request for ${s.fund} to your UPI or bank app.`, rows: row, note: "Approve it in your app. It usually becomes active in 2-7 days.", step: "Sent a new AutoPay request to your UPI app" };
+    case "setup_autopay": { const lim = Math.max(a.limit || 0, s.amount); return { title: s.mandate_limit && s.mandate_limit < s.amount ? `Raise AutoPay limit to ${rupees(lim)}` : "Set up AutoPay again", summary: `Send a new AutoPay request for ${s.fund} (limit ${rupees(lim)}) to your UPI or bank app.`, rows: [["AutoPay limit", rupees(lim)]].concat(row), note: "Approve it in your UPI or bank app. It usually becomes active in 2-7 days.", step: `Sent a new AutoPay request (limit ${rupees(lim)}) to your UPI app` }; }
     case "send_ticket": return { title: "Send to support", summary: a.subject || "Support request", rows: [["Message", (a.body || "").slice(0, 200)]], note: "No personal details are shared.", step: "Sent your message to support" };
-    case "set_reminder": return { title: "Reminder set", step: `Set a reminder${a.day ? " for the " + nth(a.day) : ""}` };
+    case "set_reminder": return { title: "Reminder set", step: `Set an in-app reminder${a.day ? " for the " + nth(a.day) : ""} to keep ${rupees(s.amount)} ready` };
     case "track_order": return { title: "Tracking your order", step: `Tracking your ${rupees(s.amount)} instalment; I'll tell you when units show` };
     case "draft_ticket": return { title: "Support message drafted", step: "Drafted a support message (no personal details)" };
   }
@@ -240,7 +249,7 @@ function applyAction(a, st) {
   const s = sipById(st, a.sip_id);
   const view = actionView(a, st);
   switch (a.type) {
-    case "pay_now": { const f = failedInst(s); st.balance -= s.amount; f.status = "processing"; f.note = `paid on ${st.today}`; s.order = { id: `PAY-${s.id}${Date.now() % 100000}`, status: "processing", debited: st.today, expected: "1-3 working days", ticks: 2, tracking: true, from_failed: f.date }; break; }
+    case "pay_now": { const f = failedInst(s); f.status = "processing"; f.note = `paid on ${st.today}`; s.order = { id: `PAY-${s.id}${Date.now() % 100000}`, status: "processing", debited: st.today, expected: "1-3 working days", ticks: 2, tracking: true, from_failed: f.date }; break; }
     case "redeem": { const amt = Math.min(s.value, a.all ? s.value : a.amount); const frac = amt / s.value; s.units = +(s.units * (1 - frac)).toFixed(3); s.invested -= Math.round(s.invested * frac); s.value = Math.round(s.value - amt); st.redemptions.push({ id: "R" + (Date.now() % 100000), sip_id: s.id, amount: Math.round(amt), load: exitLoadOn(s, amt), status: "processing", ticks: 2 }); break; }
     case "stop_sip": s.status = "stop_requested"; s.stop_ticks = 1; break;
     case "change_date": s.new_day = a.day; break;
@@ -248,7 +257,7 @@ function applyAction(a, st) {
     case "skip_next": s.skip_next = true; break;
     case "pause": s.status = "paused"; s.paused_months = a.months; break;
     case "resume": s.status = "active"; s.paused_months = 0; break;
-    case "setup_autopay": s.autopay = "pending_approval"; s.autopay_ticks = 2; break;
+    case "setup_autopay": s.autopay = "pending_approval"; s.autopay_ticks = 2; s.mandate_limit = Math.max(a.limit || 0, s.amount, s.mandate_limit || 0); break;
     case "send_ticket": st.tickets.push({ sip_id: s.id, subject: a.subject || "Support request", body: a.body || "" }); if (s.order) s.order.ticket = true; break;
     case "set_reminder": st.reminders.push({ sip_id: s.id, day: a.day, text: view.step }); break;
     case "track_order": if (s.order) s.order.tracking = true; break;
@@ -277,6 +286,7 @@ function agentRules(message, st) {
   const num = parseInt((m.replace(/,/g, "").match(/(\d{3,7})/) || [])[1] || "0", 10);
 
   if (/(which|best|better|recommend|suggest|top).{0,25}(fund|scheme|stock)|should i (buy|invest|switch)|\bstocks?\b/.test(m)) return R("out_of_scope", "", [], "I can help with your SIPs: payments, changes, withdrawals, tax and timelines. I can't recommend or compare funds.", [], [], ["How do I withdraw?", "When will my money grow?"]);
+  if (/(salary|bank balance|enough (money|balance)|balance in my)/.test(m)) return R("out_of_scope", "", [`Next SIP date: ${st.next_sip}`, `Total due that day: ${rupees(st.sips.filter(x => x.status === "active").reduce((a, x) => a + x.amount, 0))}`], `I can't see your bank balance or salary; this app only knows your SIPs, orders and AutoPay status. Your next instalments total ${rupees(st.sips.filter(x => x.status === "active").reduce((a, x) => a + x.amount, 0))} on ${st.next_sip}, so keeping that amount in ${st.bank} the day before avoids a failed payment. If that date doesn't suit when money usually comes in, you can change your SIP date.`, [], [], ["How do I change my SIP date?", "What happens if a payment fails?"]);
   if (/(pan|aadhaar|otp|\b\d{9,18}\b)/.test(m) && /(my pan|account|otp|aadhaar)/.test(m)) {
     const base = agentRules(m.replace(/my pan is \S+|account \S+|otp \S+|aadhaar \S+/g, ""), st);
     base.answer = "Please don't share your PAN, account number or OTP here; I don't need them. " + base.answer; return base;
@@ -284,7 +294,7 @@ function agentRules(message, st) {
   if (/(cancel ho jayegi|will (my )?sip (be|get) cancel|get cancelled|be cancelled|band ho ja|बंद हो जा)/.test(m)) return R("will_sip_cancel", "", st.sips.map(s => `${s.fund}: ${s.instalments.filter(i => i.status === "failed").length} failed instalments`), "No. One missed instalment doesn't cancel a SIP. A monthly SIP is cancelled only after 3 failed instalments in a row, and one successful instalment resets that.", [], [], ["What if my payment fails?", "Can I skip a month?"]);
   if (/(fail|bounce|declin|not deducted|didn'?t go|nahi kata|fail ho|two debits|double debit|debited twice)/.test(m)) {
     if (/(two debits|double|twice)/.test(m)) { const s = id || "A"; return R("payment_failed", s, lastPaid, "I'll raise this with support. If an extra amount was debited, it is refunded to your bank account. Confirm below and I'll send the message.", ["Refunds usually take 5-7 business days"], [{ type: "send_ticket", sip_id: s, subject: "Possible double debit on SIP", body: "My SIP may have been debited twice this month. Please check and refund any extra amount." }], ["Is my money safe?"]); }
-    if (fails.length) { const s = fails[0], f = failedInst(s); return R("payment_failed", s.id, [`${s.fund}: ${rupees(s.amount)} on ${f.date} not paid`].concat(f.bank_message ? [`Bank said: ${f.bank_message}`] : []), `Your invested money is safe. The ${f.date} instalment of ${rupees(s.amount)} didn't go through, so no units were bought for it. One missed instalment doesn't cancel your SIP. You can pay it now.`, ["Units are bought at the NAV of the day you pay", "Your next instalment runs as normal"], st.balance >= s.amount ? [{ type: "pay_now", sip_id: s.id }] : [], ["Will my SIP be cancelled?", "Can I change my SIP date?"]); }
+    if (fails.length) { const s = fails[0], f = failedInst(s); return R("payment_failed", s.id, [`${s.fund}: ${rupees(s.amount)} on ${f.date} not paid`].concat(f.bank_message ? [`Bank said: ${f.bank_message}`] : []), `Your invested money is safe. The ${f.date} instalment of ${rupees(s.amount)} didn't go through, so no units were bought for it. One missed instalment doesn't cancel your SIP. Tap "Keep my SIP going" on the alert and I'll fix the cause, or pay it now.`, ["Units are bought at the NAV of the day you pay", "Your next instalment runs as normal"], f.reason === "debited_not_allotted" ? [] : [{ type: "pay_now", sip_id: s.id }], ["Will my SIP be cancelled?", "Can I change my SIP date?"]); }
     return R("payment_failed", "", lastPaid.concat(["No failed instalments on your account"]), `I checked all your SIPs and every instalment went through. ${st.next_sip_is_today ? "Your next instalments are due today." : `Your next instalments are on ${st.next_sip}.`} If your bank sent a failure message, it may be for another mandate; I've drafted a message to support you can send.`, [], [{ type: "draft_ticket", sip_id: id || "A", subject: "Possible failed SIP debit", body: "I received a message about a failed SIP debit. Please check my SIP mandates and recent instalments." }], ["Why don't I see my latest units?", "Is my money safe?"]);
   }
   if (/(not (showing|reflect|visible|updated)|not in (portfolio|app)|units nahi|nahi dikh|nahi aaye|reflect|where are my units|not allot|kat gaya)/.test(m)) {
@@ -322,36 +332,28 @@ function agentRules(message, st) {
 }
 
 // ---------- guided flows: rule-based version (used when AI is off, down or unsafe) ----------
-function nextSalaryLabel(st) {
-  const t = st.demo || st.now || istNow(); const later = t.d >= st.salary_day;
-  const mm = later ? addMonths(t.m, t.y, 1) : { m: t.m, y: t.y };
-  return dlabel(st.salary_day, mm.m, mm.y);
-}
 function diagnose(st, s) {
   const f = failedInst(s);
   if (!f) return null;
-  const reason = f.reason || (s.autopay !== "active" ? "autopay_expired" : st.balance < s.amount ? "low_balance" : "bank_error");
-  return { f, reason, can_pay: st.balance >= s.amount };
+  return { f, reason: f.reason || (s.autopay !== "active" ? "autopay_expired" : "bank_error") };
 }
+function reminderDay(s) { return Math.max(1, (s.new_day || s.day) - 2); }
 function agentFlowRules(st, flow) {
   const s = sipById(st, flow.sip_id);
   const R = (topic, found, answer, next, actions, links, followups) => ({ topic, sip_id: s.id, found, answer, next: next || [], actions: actions || [], links: links || [], followups: followups || [], language: "en" });
-  const newDay = Math.min(28, st.salary_day + 2);
+  const pay = { type: "pay_now", sip_id: s.id };
   if (flow.kind === "fix") {
     const d = diagnose(st, s);
     if (!d) return R("payment_failed", [`${s.fund}: no failed instalment`], "This SIP has no failed payment to fix; it's running normally.", [], [], [{ to: "sip", sip_id: s.id }]);
-    const found = [`${s.fund}: ${rupees(s.amount)} on ${d.f.date} failed`, `Bank said: ${d.f.bank_message || FAIL_REASONS[d.reason]}`];
-    if (d.reason === "low_balance") {
-      found.push(`Balance now ${rupees(st.balance)}; salary usually arrives on the ${nth(st.salary_day)}`);
-      if (d.can_pay) return R("payment_failed", found, `The payment failed because the balance was short on the ${nth(s.day)}. Your balance now covers it, so you can pay the missed ${rupees(s.amount)} today. Your SIP date falls just before payday; moving it to the ${nth(newDay)} would stop this from happening again.`, ["Units are bought at the NAV of the day you pay"], [{ type: "pay_now", sip_id: s.id }, { type: "change_date", sip_id: s.id, day: newDay }], [{ to: "sip", sip_id: s.id }], ["Is my money safe?"]);
-      return R("payment_failed", found, `The payment failed because your balance was below the ${rupees(s.amount)} instalment (it's ${rupees(st.balance)} now). Your salary usually comes on the ${nth(st.salary_day)}, after your SIP date. I've set a reminder for the ${nth(st.salary_day)} so you can pay the missed instalment then, and moving the SIP date to the ${nth(newDay)} will keep future debits after payday.`, [`Pay the missed instalment after ${nextSalaryLabel(st)}`, "Your SIP stays active; one miss doesn't cancel it"], [{ type: "set_reminder", sip_id: s.id, day: st.salary_day }, { type: "change_date", sip_id: s.id, day: newDay }], [{ to: "sip", sip_id: s.id }, { to: "bank" }], ["Will my SIP be cancelled?"]);
+    const found = [`${s.fund}: ${rupees(s.amount)} on ${d.f.date} not paid`, `Reason: ${d.f.bank_message || FAIL_REASONS[d.reason]}`];
+    const ap = `AutoPay: ${String(s.autopay).replace(/_/g, " ")}${s.mandate_limit ? `, limit ${rupees(s.mandate_limit)}` : ""}`;
+    switch (d.reason) {
+      case "low_balance": return R("payment_failed", found.concat([ap]), `Your bank declined the ${rupees(s.amount)} debit for insufficient funds; AutoPay itself is fine. You can pay the missed instalment now by UPI or net banking once the amount is in your account. I've set a reminder 2 days before your next SIP date so you can keep the money ready. If the ${nth(s.day)} usually comes before money reaches your account, pick a later SIP date.`, ["Your SIP stays active; one missed month doesn't cancel it", "Changing the date applies from the next cycle"], [pay, { type: "set_reminder", sip_id: s.id, day: reminderDay(s) }], [{ to: "sip", sip_id: s.id }], ["Which SIP date would work better for me?", "Will my SIP be cancelled?"]);
+      case "autopay_expired": case "mandate_cancelled": case "autopay_not_approved": return R("autopay", found.concat([ap]), `${d.reason === "autopay_not_approved" ? "Your AutoPay request was never approved, so" : d.reason === "mandate_cancelled" ? "AutoPay was cancelled from your bank or UPI app, so" : "AutoPay for this SIP has expired, so"} the ${rupees(s.amount)} wasn't collected. Set up AutoPay again so future instalments run by themselves, and pay the missed instalment now.`, ["Approve the request in your UPI or bank app; it usually becomes active in 2-7 days"], [{ type: "setup_autopay", sip_id: s.id }, pay], [{ to: "autopay", sip_id: s.id }], ["Is my money safe?"]);
+      case "mandate_limit": return R("autopay", found.concat([ap]), `Your SIP is ${rupees(s.amount)} but your AutoPay limit is ${rupees(s.mandate_limit)}, so the bank couldn't collect it. Raise the AutoPay limit to ${rupees(s.amount)} (or bring the SIP amount down to ${rupees(s.mandate_limit)}), and pay the missed instalment now.`, ["Approve the new limit in your UPI or bank app; it usually becomes active in 2-7 days"], [{ type: "setup_autopay", sip_id: s.id, limit: s.amount }, pay], [{ to: "autopay", sip_id: s.id }, { to: "sip", sip_id: s.id }], []);
+      case "debited_not_allotted": return R("not_reflecting", found, `Your ${rupees(s.amount)} was debited but the fund house didn't confirm the order, so no units were added. If the order isn't confirmed, the money is refunded to your bank account in 5-7 business days. I'm tracking it and have prepared a message to support. Please don't pay again until it's settled.`, ["If refunded, you can then pay this month's instalment"], [{ type: "track_order", sip_id: s.id }, { type: "send_ticket", sip_id: s.id, subject: "SIP amount debited, units not allotted", body: `My ${s.fund} SIP amount of ${rupees(s.amount)} was debited on ${d.f.date} but no units were allotted. Please confirm the order or refund the amount.` }], [{ to: "orders" }, { to: "support" }], ["Is my money safe?"]);
+      default: return R("payment_failed", found.concat([ap]), `The bank declined the payment because of a technical error on its side; AutoPay is fine. You can retry by paying the missed ${rupees(s.amount)} now, and I've prepared a message to support in case any amount was debited.`, ["If money was debited and no units come, it's refunded in 5-7 business days"], [pay, { type: "send_ticket", sip_id: s.id, subject: "SIP payment declined by bank", body: `My ${s.fund} SIP payment of ${rupees(s.amount)} on ${d.f.date} was declined by the bank due to a technical error. Please check whether any amount was debited.` }], [{ to: "orders" }, { to: "support" }], ["Is my money safe?"]);
     }
-    if (d.reason === "autopay_expired") {
-      found.push(`AutoPay: ${s.autopay.replace("_", " ")}`);
-      const acts = [{ type: "setup_autopay", sip_id: s.id }].concat(d.can_pay ? [{ type: "pay_now", sip_id: s.id }] : []);
-      return R("autopay", found, `The payment failed because AutoPay for this SIP is no longer active, so the bank didn't take the money. Set up AutoPay again so future instalments run by themselves${d.can_pay ? ", and pay the missed " + rupees(s.amount) + " now" : ""}.`, ["Approve the request in your UPI or bank app; it usually becomes active in 2-7 days"], acts, [{ to: "autopay", sip_id: s.id }], ["Is my money safe?"]);
-    }
-    return R("payment_failed", found, `The bank declined the payment because of a technical error on its side; your balance and AutoPay are fine. You can retry by paying the missed ${rupees(s.amount)} now. I've also prepared a message to support in case money was debited.`, ["If money was debited and no units come, it's refunded in 5-7 business days"], (d.can_pay ? [{ type: "pay_now", sip_id: s.id }] : []).concat([{ type: "send_ticket", sip_id: s.id, subject: "SIP payment declined by bank", body: `My ${s.fund} SIP payment of ${rupees(s.amount)} on ${d.f.date} was declined by the bank due to a technical error. Please check whether any amount was debited.` }]), [{ to: "orders" }, { to: "support" }], ["Is my money safe?"]);
   }
   // cancel_reason
   const n = s.instalments.filter(i => i.status === "paid").length;
@@ -360,7 +362,7 @@ function agentFlowRules(st, flow) {
   switch (flow.reason) {
     case "growth": return R("growth", found, `It's normal to see little change early: you've invested ${n} instalments so far, so the value (${rupees(s.value)} on ${rupees(s.invested)}) moves only a little with the market. SIPs are meant for long holding periods and no one can promise when they grow. You could keep going, or pause for a month while you decide.` + tail, [], [{ type: "pause", sip_id: s.id, months: 1 }], [{ to: "sip", sip_id: s.id }], ["When will my money grow?"]);
     case "money_tight": return R("change_sip", found, `If money is tight, you don't have to cancel: you can skip the next instalment or pause for 1-3 months, and the SIP restarts by itself. Your ${rupees(s.value)} stays invested either way.` + tail, [], [{ type: "skip_next", sip_id: s.id }, { type: "pause", sip_id: s.id, months: 2 }], [{ to: "sip", sip_id: s.id }], []);
-    case "payment_trouble": { const d = diagnose(st, s); const acts = s.autopay !== "active" && s.autopay !== "pending_approval" ? [{ type: "setup_autopay", sip_id: s.id }] : [{ type: "change_date", sip_id: s.id, day: newDay }]; if (d && d.can_pay) acts.push({ type: "pay_now", sip_id: s.id }); return R("payment_failed", found.concat(d ? [`Last payment failed: ${d.f.bank_message || FAIL_REASONS[d.reason]}`] : []), "Payment trouble can usually be fixed without cancelling: " + (acts[0].type === "setup_autopay" ? "setting up AutoPay again lets future instalments run by themselves." : `moving the date to the ${nth(newDay)}, after your salary, avoids a short balance.`) + tail, [], acts, [{ to: acts[0].type === "setup_autopay" ? "autopay" : "sip", sip_id: s.id }], []); }
+    case "payment_trouble": { const d = diagnose(st, s); const fx = d ? agentFlowRules(st, { kind: "fix", sip_id: s.id }) : null; const acts = fx ? fx.actions.filter(a => a.type !== "send_ticket") : []; return R("payment_failed", found.concat(d ? [`Last payment: ${d.f.bank_message || FAIL_REASONS[d.reason]}`] : []), "Payment trouble can usually be fixed without cancelling: " + (fx ? fx.answer.split(". ")[0] + "." : "you can set up AutoPay, pay manually, or pick a SIP date that suits you.") + tail, [], acts, fx ? fx.links : [{ to: "sip", sip_id: s.id }], []); }
     case "need_money": return R("withdraw", found.concat([s.exit_note]), `You can withdraw only what you need from this fund (up to ${rupees(s.value)}) without cancelling the SIP; for equity funds money usually reaches ${st.bank} within 2 working days.` + tail, [], [], [{ to: "withdraw", sip_id: s.id }], ["Will I pay tax if I withdraw?"]);
     case "dont_understand": return R("how_to", found, `A SIP buys units of the fund every month at that day's NAV (the price of one unit). Your ${n} instalments bought ${s.units} units, now worth ${rupees(s.value)}. The value moves with the market and SIPs work best over long periods.` + tail, [], [], [{ to: "sip", sip_id: s.id }], ["When will my money grow?", "Is my money safe?"]);
     default: return R("stop_sip", found, `Thanks for telling me. Before you cancel: you can also skip the next instalment or pause for a while, and your ${rupees(s.value)} stays invested either way.` + tail, [], [{ type: "skip_next", sip_id: s.id }], [{ to: "sip", sip_id: s.id }], []);
@@ -391,10 +393,10 @@ function rulesLinks(out) {
 
 // ---------- checks on AI text ----------
 function agentAllowedNumbers(st, message) {
-  const set = new Set(["0", "1", "2", "3", "4", "5", "6", "7", "12", "15", "20", "28", "100", "500", "1000", "2000", "125000", "1.25", "12.5", "2026", "2027", String(st.today_day), String(SIP_DAY), String(st.balance), String(st.salary_day || 1), String(Math.min(28, (st.salary_day || 1) + 2))]);
+  const set = new Set(["0", "1", "2", "3", "4", "5", "6", "7", "12", "15", "20", "28", "100", "500", "1000", "2000", "125000", "1.25", "12.5", "2026", "2027", String(st.today_day), String(SIP_DAY), "24"]);
   const add = v => { if (v == null) return; String(v).replace(/,/g, "").match(/\d+(\.\d+)?/g)?.forEach(n => { set.add(n); set.add(n.split(".")[0]); }); };
-  add(st.today); add(st.last_sip); add(st.next_sip); if (st.now) add(nextSalaryLabel(st));
-  for (const s of st.sips) { [s.amount, s.day, s.min_sip, s.invested, s.value, s.value - s.invested, Math.abs(s.value - s.invested), s.units, s.nav, s.new_day, s.new_amount, s.exit_load, exitLoadOn(s, s.value), s.instalments.length, s.instalments.filter(i => i.status === "paid").length].forEach(add); s.instalments.forEach(i => add(i.date)); }
+  add(st.today); add(st.last_sip); add(st.next_sip);
+  for (const s of st.sips) { [s.amount, s.day, s.min_sip, s.invested, s.value, s.value - s.invested, Math.abs(s.value - s.invested), s.units, s.nav, s.new_day, s.new_amount, s.mandate_limit, reminderDay(s), s.exit_load, exitLoadOn(s, s.value), s.instalments.length, s.instalments.filter(i => i.status === "paid").length].forEach(add); s.instalments.forEach(i => add(i.date)); }
   const tot = st.sips.reduce((a, s) => ({ i: a.i + s.invested, v: a.v + s.value }), { i: 0, v: 0 }); [tot.i, tot.v, tot.v - tot.i, Math.abs(tot.v - tot.i)].forEach(add);
   add(st.sips.reduce((a, s) => a + (s.new_amount || s.amount), 0)); add(st.sips.filter(s => s.status === "active").reduce((a, s) => a + s.amount, 0)); set.add("50"); // monthly total; "Nifty 50"
   st.redemptions.forEach(r => { add(r.amount); add(r.load); });
@@ -439,15 +441,18 @@ function agentNormalise(raw) {
   const calm = t => String(t).replace(/\b(immediately|right away|instantly)\b/gi, "now").replace(/\bturant\b/gi, "abhi").replace(/तुरंत/g, "अभी");
   out.answer = calm(out.answer); for (const f of ["found", "next", "followups"]) out[f] = out[f].map(calm);
   out.actions = (Array.isArray(out.actions) ? out.actions : []).filter(a => a && ALL_ACTIONS.includes(a.type) && ["A", "B", "C"].includes(a.sip_id)).slice(0, 4)
-    .map(a => ({ type: a.type, sip_id: a.sip_id, day: a.day != null ? parseInt(a.day, 10) : undefined, amount: a.amount != null ? parseInt(a.amount, 10) : undefined, all: a.all === true || undefined, months: a.months != null ? parseInt(a.months, 10) : undefined, subject: a.subject ? String(a.subject).slice(0, 120) : undefined, body: a.body ? String(a.body).slice(0, 600) : undefined }));
+    .map(a => ({ type: a.type, sip_id: a.sip_id, day: a.day != null ? parseInt(a.day, 10) : undefined, amount: a.amount != null ? parseInt(a.amount, 10) : undefined, limit: a.limit != null ? parseInt(a.limit, 10) : undefined, all: a.all === true || undefined, months: a.months != null ? parseInt(a.months, 10) : undefined, subject: a.subject ? String(a.subject).slice(0, 120) : undefined, body: a.body ? String(a.body).slice(0, 600) : undefined }));
   out.links = (Array.isArray(out.links) ? out.links : []).filter(l => l && LINK_TARGETS.includes(l.to)).map(l => ({ to: l.to, sip_id: ["A", "B", "C"].includes(l.sip_id) ? l.sip_id : "" }))
     .filter((l, i, a) => a.findIndex(x => x.to === l.to && x.sip_id === l.sip_id) === i).slice(0, 3);
   out.reply = out.answer; out.intent = out.topic;
   return out;
 }
+// The app can't see bank balances or salary; an answer that claims to is wrong.
+const OUTSIDE_DATA = /\b(your (bank )?balance (is|was|now|of|stands)|balance (is|was) (only|just|now|below|low)|salary (has|was|got|is|will be) (credited|received|deposited|in)|salary (usually )?(arrives|comes|is credited) on|you (have|had) (only )?₹[\d,]+ in your (bank|account))\b/i;
 function agentGuard(out, st, message) {
   const allowed = agentAllowedNumbers(st, message);
   const flags = [];
+  for (const t of [out.answer].concat(out.found, out.next)) if (OUTSIDE_DATA.test(t) && !OUTSIDE_DATA.test(String(message || ""))) { flags.push("claims to see bank balance or salary"); break; }
   const parts = [["answer", out.answer]].concat(out.found.map((x, i) => ["found" + (i + 1), x]), out.next.map((x, i) => ["next" + (i + 1), x]), out.followups.map((x, i) => ["followup" + (i + 1), x]));
   for (const [k, v] of parts) { const fl = textChecks(v, st, allowed); if (fl.length) flags.push(...fl.map(x => `${k}: ${x}`)); }
   for (const a of out.actions) for (const f of ["subject", "body"]) if (a[f]) {
@@ -520,16 +525,17 @@ function agentView(st) {
     else if (f) { label = `Not paid · ${f.date}`; tone = "warn"; }
     else if (s.order && s.order.status === "delayed") { label = "Units not showing yet"; tone = "warn"; }
     else if (s.order && s.order.status === "processing" && !s.order.scheduled) { label = "Units on the way"; tone = "info"; }
-    else if (s.autopay === "expired") { label = "AutoPay not active"; tone = "warn"; }
+    else if (["expired", "cancelled", "not_approved"].includes(s.autopay)) { label = "AutoPay not active"; tone = "warn"; }
+    else if (s.mandate_limit && s.mandate_limit < s.amount) { label = "AutoPay limit too low"; tone = "warn"; }
     else if (s.autopay === "pending_approval") { label = "AutoPay waiting for approval"; tone = "info"; }
     return { id: s.id, fund: s.fund, plan: s.plan, category: s.category, amount: s.new_amount || s.amount, day: s.new_day || s.day, label, tone, skip_next: s.skip_next,
       last_invested: lastPaidOf(s) || "—", next: s.status === "active" ? (s.skip_next ? "Skipped · " + st.next_sip : st.next_sip_is_today ? "Today" : st.next_sip) : "—",
-      invested: s.invested, value: s.value, units: s.units, nav: s.nav, status: s.status, autopay: s.autopay, exit_note: s.exit_note, min_sip: s.min_sip, started: s.started, failed: !!f, fail_reason: f ? (f.bank_message || "") : "", instalments: s.instalments.slice(-8).reverse() };
+      invested: s.invested, value: s.value, units: s.units, nav: s.nav, status: s.status, autopay: s.autopay, exit_note: s.exit_note, min_sip: s.min_sip, started: s.started, mandate_limit: s.mandate_limit || null, failed: !!f, fail_reason: f ? (f.bank_message || "") : "", instalments: s.instalments.slice(-8).reverse() };
   });
   const invested = st.sips.reduce((a, s) => a + s.invested, 0), value = st.sips.reduce((a, s) => a + s.value, 0);
   const obs = st.observations || [];
-  return { user: st.user, today: st.today, last_sip: st.last_sip, next_sip: st.next_sip, autoplay: !!st.autoplay, ended: false, balance: st.balance, bank: st.bank, invested, value, gain: value - invested,
+  return { user: st.user, today: st.today, last_sip: st.last_sip, next_sip: st.next_sip, autoplay: !!st.autoplay, ended: false, bank: st.bank, invested, value, gain: value - invested,
     active_sips: st.sips.filter(s => s.status === "active").length, sips, needs_you: obs.filter(o => o.status === "open"), observations: obs.slice(0, 30), inbox: (st.inbox || []).slice(0, 40), unread: (st.inbox || []).filter(i => !i.read).length,
     activity: st.activity.slice(0, 30), redemptions: st.redemptions, issues: findIssues(st), lang: st.lang, last_check: st.last_check || "",
-    salary_day: st.salary_day, demo_date: st.demo ? st.today : "", tickets: st.tickets || [], drafts: st.drafts || [], reminders: st.reminders || [], cancel_reasons: CANCEL_REASONS };
+    demo_date: st.demo ? st.today : "", tickets: st.tickets || [], drafts: st.drafts || [], reminders: st.reminders || [], cancel_reasons: CANCEL_REASONS };
 }
