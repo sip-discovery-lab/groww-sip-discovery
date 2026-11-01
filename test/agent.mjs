@@ -10,7 +10,7 @@ const mode = { m: "ok" };
 const DB = makeD1();
 const pushes = []; const research = [];
 const env = { DB, GEMINI_AGENT_MOCK: makeAgentMock(lib.agentRules, mode, lib.agentFlowRules), GEMINI_RESEARCH_MOCK: async x => { research.push(x.topic); return researchMock(x); }, GEMINI_MOCK: async () => ({ situation: "unclear", confidence: .5, language: "en", summary: "x", action_order: [] }), GEMINI_CARE_MOCK: async () => ({ cause: "other", plan: [], found: "x", home_message: "y" }),
-  TICK_FORCE_MS: -1, NOW_MS: Date.UTC(2026, 9, 25, 6, 0), PUSH_FETCH: async (url, init) => { pushes.push({ url, init }); return new Response(null, { status: 201 }); } };
+  TICK_FORCE_MS: -1, START_SCENARIO: "normal", NOW_MS: Date.UTC(2026, 9, 25, 6, 0), PUSH_FETCH: async (url, init) => { pushes.push({ url, init }); return new Response(null, { status: 201 }); } };
 const call = async (path, body, method) => { const r = await W.fetch(new Request("https://x.test" + path, body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : { method: method || "GET" }), env); const ct = r.headers.get("content-type") || ""; return { status: r.status, h: r.headers, body: ct.includes("json") ? await r.json() : await r.text() }; };
 const ask = async (sid, message, lang) => (await call("/api/agent/message", { session_id: sid, message, lang: lang || "en" })).body;
 const tick = async sid => (await call("/api/agent/tick", { session_id: sid, force: true })).body;
@@ -61,7 +61,6 @@ r = await call("/api/agent/confirm", { session_id: sid, proposal_ids: [red.id] }
 t("redeem executes after confirm", r.body.ok && r.body.view.sips[0].value === 4192 && r.body.view.redemptions[0].status === "processing", r.body.view.sips[0]);
 b = await tick(sid); b = await tick(sid);
 t("follow-up: withdrawal credited notification", b.fresh.some(o => /Withdrawal credited/.test(o.title)) && b.view.inbox[0].body.includes("₹1,980"), b.view.inbox[0]);
-t("balance increased by net", b.view.balance === 42500 + 1980, b.view.balance);
 b = await ask(sid, "I want to close my Nifty 50 SIP");
 const stop = b.proposals.find(p => p.type === "stop_sip");
 t("stop proposed with units-stay note", stop && /stay invested/.test(stop.note) && stop.danger, stop);
@@ -79,31 +78,56 @@ t("PII removed and warned", !/ABCDE1234F|123456789012/.test(JSON.stringify(b)) &
 // ---- SIP day: instant failure alert, options, fix flow, cancel flow, redirect links ----
 const flowAsk = async (sid, flow) => (await call("/api/agent/message", { session_id: sid, flow, lang: "en" })).body;
 r = await call("/api/agent/start", { reset: true }); sid = r.body.session_id;
-t("situations offered", r.body.situations.length === 5);
+t("situations offered", r.body.situations.length === 9);
 r = await call("/api/agent/situation", { session_id: sid, kind: "sip_low_balance" });
 v = r.body.view;
 const fo = r.body.fresh.find(o => o.kind === "payment_failed");
 t("SIP day: instant failure notification", fo && /payment failed today/.test(fo.title) && v.inbox[0].title === fo.title && v.needs_you.length === 1, r.body.fresh);
-t("SIP day: demo date moved to the 26th, others paid", /^26 /.test(v.demo_date) && v.sips[0].instalments[0].status === "processing" && v.sips[1].failed && v.balance === 1240, [v.demo_date, v.balance]);
+t("SIP day: demo date moved to the 26th, others paid, no balance shown", /^26 /.test(v.demo_date) && v.sips[0].instalments[0].status === "processing" && v.sips[1].failed && v.balance === undefined && v.salary_day === undefined, [v.demo_date]);
 const ob = v.observations.find(o => o.kind === "payment_failed");
-t("failure analysis: bank reason, balance, salary day", ob.why.some(w => /Insufficient balance/.test(w)) && ob.why.some(w => /₹1,740/.test(w)) && ob.why.some(w => /1st/.test(w)) && ob.options === true, ob.why);
+t("failure analysis: only what the app knows", ob.why.some(w => /insufficient funds/.test(w)) && !/salary|₹1,740|balance at/i.test(JSON.stringify(ob)) && ob.options === true, ob.why);
 r = await call("/api/agent/situation", { session_id: sid, kind: "sip_low_balance" });
 t("same SIP day twice: no duplicate", r.body.fresh.length === 0 && r.body.note);
 b = await flowAsk(sid, { kind: "fix", sip_id: "B" });
-t("fix flow (low balance): reminder auto + date change proposed, no pay now", b.done.some(d => /reminder/i.test(d)) && b.proposals.some(p => p.type === "change_date" && p.day === 3) && !b.proposals.some(p => p.type === "pay_now"), b);
-t("fix flow links to SIP page", b.links.some(l => l.to === "sip" && l.sip_id === "B"), b.links);
+t("fix flow (insufficient funds): pay now + reminder before next SIP, link to SIP page, no salary talk", b.proposals.some(p => p.type === "pay_now") && b.done.some(d => /reminder/i.test(d) && /24th/.test(d)) && b.links.some(l => l.to === "sip") && !/salary|balance (is|was)/i.test(b.answer), b);
 t("fix flow never proposes stop", !b.proposals.some(p => p.type === "stop_sip"));
-r = await call("/api/agent/confirm", { session_id: sid, proposal_ids: b.proposals.map(p => p.id) });
-t("confirmed fix -> alert in progress", r.body.view.observations.find(o => o.kind === "payment_failed").status === "in_progress" && r.body.view.sips[1].day === 3, r.body.view.sips[1]);
-let got = [];
-for (let i = 0; i < 4; i++) got = got.concat((await tick(sid)).fresh);
-t("follow-ups: units added + salary received alert", got.some(o => o.kind === "units_allotted") && got.some(o => o.kind === "salary_in"), got.map(o => o.kind));
-b = await flowAsk(sid, { kind: "fix", sip_id: "B" });
 const pay = b.proposals.find(p => p.type === "pay_now");
-t("after salary, fix flow proposes pay now", pay, b.proposals);
 r = await call("/api/agent/confirm", { session_id: sid, proposal_ids: [pay.id] });
+t("confirmed pay -> alert being fixed", ["in_progress", "resolved"].includes(r.body.view.observations.find(o => o.kind === "payment_failed").status), r.body.view.observations[0]);
 let b1 = await tick(sid); b = await tick(sid); b.fresh = b1.fresh.concat(b.fresh);
-t("paid -> units allotted, alerts resolved", b.view.needs_you.length === 0 && !b.view.sips[1].failed, b.view.needs_you);
+t("paid -> units allotted, alert resolved", b.view.needs_you.length === 0 && !b.view.sips[1].failed && b.fresh.some(o => o.kind === "units_allotted"), b.view.needs_you);
+// every other cause, each fixed with the app's own tools
+const causeChecks = {
+  sip_autopay: x => x.proposals.some(p => p.type === "setup_autopay") && x.proposals.some(p => p.type === "pay_now") && x.links.some(l => l.to === "autopay"),
+  sip_not_approved: x => x.proposals.some(p => p.type === "setup_autopay") && /never approved/.test(x.answer),
+  sip_mandate_cancelled: x => x.proposals.some(p => p.type === "setup_autopay") && /cancelled/.test(x.answer),
+  sip_mandate_limit: x => x.proposals.some(p => p.type === "setup_autopay" && p.limit === 2000 && /Raise AutoPay limit/.test(p.title)) && /limit/.test(x.answer),
+  sip_bank_error: x => x.proposals.some(p => p.type === "pay_now") && x.proposals.some(p => p.type === "send_ticket") && x.links.some(l => l.to === "support"),
+  sip_debited: x => x.done.some(d => /Tracking/.test(d)) && x.proposals.some(p => p.type === "send_ticket") && !x.proposals.some(p => p.type === "pay_now"),
+};
+for (const [k, fn] of Object.entries(causeChecks)) {
+  r = await call("/api/agent/start", { reset: true, scenario: k }); sid = r.body.session_id;
+  t(`${k}: alert at launch`, r.body.fresh.some(o => o.kind === "payment_failed"), r.body.fresh);
+  b = await flowAsk(sid, { kind: "fix", sip_id: "B" });
+  t(`${k}: right fix with app tools`, fn(b), [b.answer, b.proposals.map(p => p.type + (p.limit ? ":" + p.limit : "")), b.done, b.links]);
+}
+// debited: refund follow-up, then paying again is allowed
+r = await call("/api/agent/start", { reset: true, scenario: "sip_debited" }); sid = r.body.session_id;
+r = await call("/api/agent/propose", { session_id: sid, type: "pay_now", sip_id: "B" });
+t("debited: can't pay again before refund", r.status === 400, r.body);
+let got = []; for (let i = 0; i < 4; i++) got = got.concat((await tick(sid)).fresh);
+t("debited: refund notification", got.some(o => o.kind === "refunded"), got.map(o => o.kind));
+r = await call("/api/agent/propose", { session_id: sid, type: "pay_now", sip_id: "B" });
+t("after refund, pay now allowed", r.body.ok, r.body);
+// mandate limit: raising the limit makes AutoPay active again
+r = await call("/api/agent/start", { reset: true, scenario: "sip_mandate_limit" }); sid = r.body.session_id;
+r = await call("/api/agent/propose", { session_id: sid, type: "setup_autopay", sip_id: "B", limit: 2000 });
+r = await call("/api/agent/confirm", { session_id: sid, proposal_ids: [r.body.proposal.id] });
+await tick(sid); b = await tick(sid);
+t("limit raised -> AutoPay active with new limit", b.view.sips[1].autopay === "active" && b.view.sips[1].mandate_limit === 2000, b.view.sips[1]);
+b = await ask(sid, "Is there enough balance in my bank account for the next SIP?");
+t("balance question: says it can't see the bank balance", /can't see your bank balance/.test(b.answer) && !b.proposals.length, b.answer);
+r = await call("/api/agent/start", { reset: true, scenario: "sip_low_balance" }); sid = r.body.session_id;
 // cancel flow
 b = await flowAsk(sid, { kind: "cancel_reason", sip_id: "B", reason: "money_tight" });
 t("cancel flow: alternatives first, cancel last", b.proposals.length >= 2 && b.proposals[b.proposals.length - 1].type === "stop_sip" && b.proposals.some(p => ["skip_next", "pause"].includes(p.type)), b.proposals.map(p => p.type));
@@ -138,7 +162,7 @@ r = await call("/api/agent/situation", { session_id: sid, kind: "bogus" });
 t("unknown situation -> 400", r.status === 400);
 
 // ---- gate pass: AI path, research, guards ----
-await DB.prepare(`INSERT INTO eval_runs (id, ts, model, prompt_version, n, passed, breaks, score, gate, complete, errors) VALUES ('g1', ?, 'gemini-3.5-flash-lite', 'agent-v4', 42, 42, 0, 1, 1, 1, 0)`).bind(new Date().toISOString()).run();
+await DB.prepare(`INSERT INTO eval_runs (id, ts, model, prompt_version, n, passed, breaks, score, gate, complete, errors) VALUES ('g1', ?, 'gemini-3.5-flash-lite', 'agent-v5', 47, 47, 0, 1, 1, 1, 0)`).bind(new Date().toISOString()).run();
 r = await call("/api/agent/start", { reset: true }); sid = r.body.session_id;
 t("gate passed visible", r.body.gate.passed === true);
 b = await ask(sid, "When will I get the money if I withdraw from my Bluechip fund?");
@@ -150,6 +174,8 @@ b = await ask(sid, "How can I withdraw my money?");
 t("research cached (no second call)", research.filter(x => x === "withdraw").length === 1);
 mode.m = "bad"; b = await ask(sid, "My SIP payment failed this month");
 t("unsafe AI -> standard answer", b.used_ai === false && /safety rule/.test(b.notice) && !/waived|SEBI/.test(b.answer) && !b.proposals.some(p => p.type === "stop_sip"), b);
+mode.m = "bad_once"; b = await ask(sid, "When will my invested money grow?");
+t("self-correction: rule break fixed on second try", b.used_ai === true && !/double|1,080/.test(JSON.stringify(b)), b);
 mode.m = "leak"; b = await ask(sid, "How can I withdraw my money?");
 t("source mention blocked", b.used_ai === false && !/Zerodha|website/i.test(JSON.stringify(b.answer)), b.answer);
 mode.m = "down"; b = await ask(sid, "Is my money safe?");
@@ -183,6 +209,18 @@ t("cron ticks and pushes when units arrive", cr && cr.ticked >= 1 && pushes.leng
 r = await call("/api/agent/latest?endpoint=" + encodeURIComponent("https://push.example/abc"));
 t("latest notification for push", /Units added/.test(r.body.notification.title), r.body);
 
+// ---- default demo opens on a failed SIP payment ----
+delete env.START_SCENARIO;
+r = await call("/api/agent/start", { reset: true });
+t("default start: failed payment alert at launch", r.body.fresh.some(o => o.kind === "payment_failed") && r.body.view.needs_you.length === 1 && r.body.view.inbox[0].level === "alert", r.body.fresh);
+r = await call("/api/agent/start", { reset: true, scenario: "normal" });
+t("scenario normal: clean account", r.body.fresh.length === 0 && r.body.view.needs_you.length === 0);
+r = await call("/api/agent/start", { reset: true, scenario: "sip_autopay" });
+t("scenario AutoPay: AutoPay failure at launch", r.body.view.observations.some(o => o.reason === "autopay_expired"));
+const resumed = await call("/api/agent/start", { session_id: r.body.session_id });
+t("resume doesn't re-run the SIP day", resumed.body.fresh.length === 0 && resumed.body.view.observations.filter(o => o.kind === "payment_failed").length === 1);
+env.START_SCENARIO = "normal";
+
 // ---- the real SIP date: the agent runs the debits itself ----
 r = await call("/api/agent/start", { reset: true }); sid = r.body.session_id;
 env.NOW_MS = Date.UTC(2026, 9, 26, 6, 0);
@@ -200,13 +238,13 @@ t("failed SIP payment pushes an alert at once", pushes.length === before + 1);
 // ---- quality gate with the oracle mock ----
 r = await call("/api/eval/start", { suite: "agent" });
 if (r.status === 429) { await DB.prepare(`DELETE FROM eval_runs`).run(); r = await call("/api/eval/start", { suite: "agent" }); }
-t("eval start", r.body.ok && r.body.cases.length === 42, r.body);
+t("eval start", r.body.ok && r.body.cases.length === 47, r.body);
 const fails = [];
 for (const id of r.body.cases) { const c = (await call("/api/eval/case", { run_id: r.body.run_id, case_id: id })).body.case; if (!c.ok) fails.push(id + ": " + c.reasons + " :: " + c.summary.slice(0, 160)); }
 const fin = (await call("/api/eval/finish", { run_id: r.body.run_id })).body;
 t("gate passes with good model", fin.gate === true, fails);
 r = await call("/api/eval?suite=agent");
-t("latest shows meta", r.body.case_meta && r.body.case_meta.length === 42 && r.body.cases.length === 42);
+t("latest shows meta", r.body.case_meta && r.body.case_meta.length === 47 && r.body.cases.length === 47);
 
 // ---- the standard (rule-based) agent on the gate cases ----
 const cases = JSON.parse(fs.readFileSync(new URL("../eval/agent_cases.json", import.meta.url), "utf8"));

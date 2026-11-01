@@ -3,13 +3,14 @@ import fs from "node:fs";
 const cases = JSON.parse(fs.readFileSync(new URL("../eval/agent_cases.json", import.meta.url), "utf8"));
 const R = { en: "I've checked your SIPs. Your invested money is safe.", hinglish: "Maine aapki SIP check ki hai. Aapka invested paisa safe hai.", hi: "मैंने आपकी SIP देखी है। आपका निवेश किया हुआ पैसा सुरक्षित है।" };
 export function makeAgentMock(rules, mode, flowRules) {
-  return async ({ st, message, lang, flow }) => {
+  return async ({ st, message, lang, flow, attempt }) => {
+    if (mode.m === "bad_once" && attempt === 1) return { topic: "growth", sip_id: "", found: ["Current value ₹1,080"], answer: "Your money will double soon.", actions: [] };
     if (flow && flowRules && mode.m !== "down" && mode.m !== "bad") { const r = flowRules(st, flow); return Object.assign(r, { answer: lang === "en" ? r.answer : R[lang], language: lang }); }
     if (mode.m === "down") throw new Error("HTTP 429 · Resource exhausted (free-tier limit reached: try again later)");
     if (mode.m === "bad") return { topic: "payment_failed", sip_id: "A", found: ["As per SEBI rules on www.example.com"], answer: "Bounce fee waived! Pay ₹999 immediately or you will lose everything.", actions: [{ type: "stop_sip", sip_id: "A" }] };
     if (mode.m === "leak") return { topic: "withdraw", sip_id: "", found: ["Value ₹6,192"], answer: "According to Zerodha's website, money is credited within 2 working days.", actions: [] };
     const clean = t => t.replace(/\[removed\]/g, "").replace(/[A-Z]{5}\d{4}[A-Z]|\d{9,18}/g, "").replace(/\s+/g, " ").trim();
-    const c = cases.find(x => clean(x.message) === clean(message) && x.lang === lang);
+    const c = cases.find(x => x.message && clean(x.message) === clean(message) && x.lang === lang);
     const r = rules(message, st);
     if (!c) return Object.assign(r, { answer: lang === "en" ? r.answer : R[lang] });
     const num = parseInt((message.replace(/,/g, "").match(/(\d{3,5})/) || [])[1] || "0", 10);
