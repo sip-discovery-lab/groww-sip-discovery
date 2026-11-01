@@ -53,13 +53,12 @@ Open the app at `/`. It is a Groww-style concept app with a demo user (Riya) and
 5. **Follows up in the background:** the agent keeps checking (in the open app and via Cloudflare Cron with the app closed) and notifies the user when units are added, a withdrawal is credited, a stop is processed or AutoPay is active again (in-app, inbox, and Web Push). Demo time is accelerated: things that take 1-2 working days finish in about a minute.
 
 **On the SIP date (failed payment flow):**
-1. **Instant alert.** SIP Care watches every debit on the SIP date. If one fails, it notifies the user at once (in-app, inbox and Web Push) with what happened, why (bank reason, balance at the time of the debit, salary day, AutoPay status) and what it means (invested money safe, SIP still active).
-2. **Options first.** SIP Care recommends checking the options before deciding: keep my SIP going (recommended), take a break (pause 1-3 months), cancel this SIP, or ask something else.
-3. **Keep going → AI fix.** SIP Care detects the cause and proposes the best fix: low balance → reminder on salary day + move the SIP date after payday (pay the missed instalment once salary arrives; it alerts when salary lands); AutoPay expired → set up AutoPay again + pay now; bank error → retry payment + support ticket. Stop and withdraw are never proposed here.
-4. **Cancel → AI asks why first.** Reasons (not seeing growth, money tight, payment trouble, need the money, don't understand SIPs, other + own words), then a recommendation that fits the reason (e.g. early SIP values move little, explained with the user's own numbers; skip or pause; withdraw only what's needed). "Cancel this SIP" is always offered, last, and a "skip and cancel now" button is always there.
-5. **Redirects.** Answers carry buttons to the right page: SIP details (date, amount, skip, pause, AutoPay, withdraw, cancel), AutoPay settings, payments & orders, support ticket (pre-drafted), bank account, withdraw. Every change made from a page still needs Confirm.
-
-On the real SIP date the agent runs the debits itself (all succeed in the demo account). **For testers:** "try a situation" jumps to the next SIP date with a chosen outcome (low balance, AutoPay expired, bank error, all paid) or shows money debited without units.
+1. **Instant alert.** The demo opens on the SIP date with a failed payment. Every visit or refresh shows a different cause, all of which the app itself knows from the bank's reply, the AutoPay (mandate) status or the order status: insufficient funds, AutoPay expired, AutoPay never approved, AutoPay limit below the SIP amount, AutoPay cancelled from the bank app, bank technical error, or money debited but units not added.
+2. **Only in-app knowledge.** SIP Care can't see bank balances, salary or other apps, never claims to, and a safety check blocks any answer that does.
+3. **Options first.** Keep my SIP going (recommended), take a break (pause 1-3 months), cancel, or ask something else.
+4. **Keep going → fix screen.** SIP Care checks the cause and lays out a step-by-step plan using the app's own tools: pay the missed instalment by UPI/net banking, set up AutoPay again or raise its limit, a reminder 2 days before the next SIP date, a SIP date change on the SIP page (the user picks the date), a pre-drafted support ticket, or order tracking and refund follow-up (no repeat payment until the refund lands). Each step opens or runs in its own section; anything that moves money or changes the SIP needs Confirm.
+5. **Cancel → SIP Care asks why first**, then shows its recommendation on the cancel screen: options that fit the reason, with "Cancel anyway" always last.
+6. **Questions go to the chat**; fixes happen in their sections (SIP details, AutoPay, payments & orders, support, withdraw).
 
 **Safety rules (checked on every AI answer):** no fund recommendations or comparisons, no return predictions, only numbers from the account, the guidelines or the user's message, no fee waivers, no fear or urgency words, no requests for personal data (PAN, account numbers, OTP are stripped before the AI sees them), no mention of sources. If any rule breaks, or AI is off, down or over the free limit, SIP Care uses its rule-based answer and labels it "Standard".
 
@@ -74,9 +73,9 @@ On the real SIP date the agent runs the debits itself (all succeed in the demo a
 | `POST /api/agent/settings` | Pause/resume background checks, language, mark notifications read |
 | `GET /api/agent/push-key`, `POST /api/agent/push-subscribe`, `GET /api/agent/latest` | Web Push alerts (VAPID keys generated and kept in D1; pushes carry no data) |
 | `POST /api/agent/feedback`, `GET /api/agent/stats` | Tester answers and usage stats |
-| `GET /quality` | Run the 42-case agent quality gate (`agent-v4`: 30 questions + 12 guided fix/cancel cases) |
+| `GET /quality` | Run the 47-case agent quality gate (`agent-v5`: 32 questions + 15 guided fix/cancel cases) |
 
-AI answers are used only after the agent passes its gate: at least 90% of 42 cases and zero rule breaks, per model and version.
+AI answers are used only after the agent passes its gate: at least 90% of 47 cases and zero rule breaks, per model and version.
 
 ## Earlier SIP Care diagnosis API
 
