@@ -368,7 +368,7 @@
   "situations": [
    "sip_autopay"
   ],
-  "sip": "C",
+  "sip": "B",
   "must": [
    "setup_autopay"
   ],
@@ -467,180 +467,6 @@
   "no_actions": true,
   "need_found": true,
   "type": "chat"
- },
- {
-  "id": "F01",
-  "from": "SIP day: low balance → keep going",
-  "lang": "en",
-  "type": "flow",
-  "situations": [
-   "sip_low_balance"
-  ],
-  "flow": {
-   "kind": "fix",
-   "sip_id": "B"
-  },
-  "topic": [
-   "autopay",
-   "missed_instalment",
-   "payment_failed"
-  ],
-  "sip": "B",
-  "must": [
-   "change_date"
-  ],
-  "forbid": [
-   "stop_sip",
-   "redeem",
-   "pay_now"
-  ],
-  "need_found": true,
-  "must_links": [
-   "sip|bank"
-  ]
- },
- {
-  "id": "F02",
-  "from": "SIP day: low balance → keep going",
-  "lang": "hinglish",
-  "type": "flow",
-  "situations": [
-   "sip_low_balance"
-  ],
-  "flow": {
-   "kind": "fix",
-   "sip_id": "B"
-  },
-  "topic": [
-   "autopay",
-   "missed_instalment",
-   "payment_failed"
-  ],
-  "sip": "B",
-  "must": [
-   "change_date"
-  ],
-  "forbid": [
-   "stop_sip",
-   "redeem",
-   "pay_now"
-  ]
- },
- {
-  "id": "F03",
-  "from": "Salary arrived → keep going",
-  "lang": "en",
-  "type": "flow",
-  "situations": [
-   "sip_low_balance"
-  ],
-  "flow": {
-   "kind": "fix",
-   "sip_id": "B"
-  },
-  "topic": [
-   "autopay",
-   "missed_instalment",
-   "payment_failed"
-  ],
-  "sip": "B",
-  "state_patch": {
-   "balance": 46240
-  },
-  "must": [
-   "pay_now"
-  ],
-  "forbid": [
-   "stop_sip",
-   "redeem"
-  ],
-  "need_found": true
- },
- {
-  "id": "F04",
-  "from": "SIP day: AutoPay expired → keep going",
-  "lang": "en",
-  "type": "flow",
-  "situations": [
-   "sip_autopay"
-  ],
-  "flow": {
-   "kind": "fix",
-   "sip_id": "B"
-  },
-  "topic": [
-   "autopay",
-   "missed_instalment",
-   "payment_failed"
-  ],
-  "sip": "B",
-  "must": [
-   "setup_autopay",
-   "pay_now"
-  ],
-  "forbid": [
-   "stop_sip",
-   "redeem"
-  ],
-  "must_links": [
-   "autopay"
-  ]
- },
- {
-  "id": "F05",
-  "from": "SIP day: AutoPay expired → keep going",
-  "lang": "hi",
-  "type": "flow",
-  "situations": [
-   "sip_autopay"
-  ],
-  "flow": {
-   "kind": "fix",
-   "sip_id": "B"
-  },
-  "topic": [
-   "autopay",
-   "missed_instalment",
-   "payment_failed"
-  ],
-  "sip": "B",
-  "must": [
-   "setup_autopay"
-  ],
-  "forbid": [
-   "stop_sip",
-   "redeem"
-  ]
- },
- {
-  "id": "F06",
-  "from": "SIP day: bank error → keep going",
-  "lang": "en",
-  "type": "flow",
-  "situations": [
-   "sip_bank_error"
-  ],
-  "flow": {
-   "kind": "fix",
-   "sip_id": "B"
-  },
-  "topic": [
-   "autopay",
-   "missed_instalment",
-   "payment_failed"
-  ],
-  "sip": "B",
-  "must": [
-   "pay_now"
-  ],
-  "forbid": [
-   "stop_sip",
-   "redeem",
-   "change_date"
-  ],
-  "must_links": [
-   "support|orders"
-  ]
  },
  {
   "id": "F07",
@@ -834,5 +660,308 @@
    "redeem"
   ],
   "stop_last": true
+ },
+ {
+  "id": "F01",
+  "from": "SIP day: insufficient funds → keep going",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_low_balance"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "missed_instalment",
+   "not_reflecting",
+   "payment_failed"
+  ],
+  "sip": "B",
+  "must": [
+   "pay_now"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "need_found": true,
+  "must_links": [
+   "sip"
+  ]
+ },
+ {
+  "id": "F02",
+  "from": "SIP day: insufficient funds → keep going",
+  "lang": "hinglish",
+  "type": "flow",
+  "situations": [
+   "sip_low_balance"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "missed_instalment",
+   "not_reflecting",
+   "payment_failed"
+  ],
+  "sip": "B",
+  "must": [
+   "pay_now"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ]
+ },
+ {
+  "id": "F03",
+  "from": "SIP day: AutoPay limit too low → keep going",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_mandate_limit"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "missed_instalment",
+   "not_reflecting",
+   "payment_failed"
+  ],
+  "sip": "B",
+  "must": [
+   "setup_autopay"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "must_links": [
+   "autopay"
+  ],
+  "need_found": true
+ },
+ {
+  "id": "F04",
+  "from": "SIP day: AutoPay expired → keep going",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_autopay"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "missed_instalment",
+   "not_reflecting",
+   "payment_failed"
+  ],
+  "sip": "B",
+  "must": [
+   "setup_autopay",
+   "pay_now"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "must_links": [
+   "autopay"
+  ]
+ },
+ {
+  "id": "F05",
+  "from": "SIP day: AutoPay expired → keep going",
+  "lang": "hi",
+  "type": "flow",
+  "situations": [
+   "sip_autopay"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "missed_instalment",
+   "not_reflecting",
+   "payment_failed"
+  ],
+  "sip": "B",
+  "must": [
+   "setup_autopay"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ]
+ },
+ {
+  "id": "F06",
+  "from": "SIP day: bank error → keep going",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_bank_error"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "missed_instalment",
+   "not_reflecting",
+   "payment_failed"
+  ],
+  "sip": "B",
+  "must": [
+   "pay_now"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem",
+   "change_date"
+  ],
+  "must_links": [
+   "support|orders"
+  ]
+ },
+ {
+  "id": "F13",
+  "from": "SIP day: AutoPay never approved → keep going",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_not_approved"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "missed_instalment",
+   "not_reflecting",
+   "payment_failed"
+  ],
+  "sip": "B",
+  "must": [
+   "setup_autopay"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "must_links": [
+   "autopay"
+  ]
+ },
+ {
+  "id": "F14",
+  "from": "SIP day: AutoPay cancelled from bank app → keep going",
+  "lang": "hinglish",
+  "type": "flow",
+  "situations": [
+   "sip_mandate_cancelled"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "missed_instalment",
+   "not_reflecting",
+   "payment_failed"
+  ],
+  "sip": "B",
+  "must": [
+   "setup_autopay"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ]
+ },
+ {
+  "id": "F15",
+  "from": "SIP day: debited, units not added → keep going",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_debited"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "missed_instalment",
+   "not_reflecting",
+   "payment_failed"
+  ],
+  "sip": "B",
+  "must": [
+   "track_order",
+   "send_ticket"
+  ],
+  "forbid": [
+   "pay_now",
+   "stop_sip",
+   "redeem"
+  ],
+  "must_links": [
+   "orders|support"
+  ]
+ },
+ {
+  "id": "Q31",
+  "from": "Edge: asks about salary",
+  "lang": "en",
+  "type": "chat",
+  "message": "Has my salary been credited? Can I pay the missed SIP now?",
+  "topic": [
+   "out_of_scope",
+   "unclear",
+   "payment_failed",
+   "missed_instalment",
+   "status",
+   "how_to"
+  ],
+  "situations": [
+   "sip_low_balance"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ]
+ },
+ {
+  "id": "Q32",
+  "from": "Edge: asks about bank balance",
+  "lang": "en",
+  "type": "chat",
+  "message": "Is there enough balance in my bank account for the next SIP?",
+  "topic": [
+   "out_of_scope",
+   "unclear",
+   "status",
+   "how_to"
+  ],
+  "no_actions": true
  }
 ]
