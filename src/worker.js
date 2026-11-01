@@ -233,15 +233,16 @@ async function researchNotes(env, db, topic, gate) {
   const key = `research:v1:${topic}`;
   try {
     const hit = await db.prepare(`SELECT ts, body FROM care_cache WHERE k = ?`).bind(key).first();
-    if (hit && Date.now() - Date.parse(hit.ts) < 7 * 86400000) return hit.body;
+    const age = hit ? Date.now() - Date.parse(hit.ts) : Infinity;
+    if (hit && (hit.body ? age < 7 * 86400000 : age < 3600000)) return hit.body; // an empty result is retried after an hour, not on every question
     if ((await bump(db, "research")) > 60) return hit ? hit.body : "";
-    const raw = await callGemini(env, { topic }, { plain: true, tools: [{ google_search: {} }], mock: env.GEMINI_RESEARCH_MOCK,
+    const raw = await callGemini(env, { topic }, { plain: true, noRetry: true, budgetMs: 7000, attemptMs: 7000, tools: [{ google_search: {} }], mock: env.GEMINI_RESEARCH_MOCK,
       system: "You check current Indian mutual fund rules for an internal knowledge base. Reply with 4-8 short plain-text bullet facts (numbers, timelines, steps). No links, no website, company or regulator names, no advice.",
       user: `Current rules (${new Date().getFullYear()}): ${RESEARCH_TOPICS[topic]}.` });
     const notes = cleanNotes(raw);
-    if (notes) await db.prepare(`INSERT OR REPLACE INTO care_cache (k, ts, body) VALUES (?,?,?)`).bind(key, now(), notes).run();
+    await db.prepare(`INSERT OR REPLACE INTO care_cache (k, ts, body) VALUES (?,?,?)`).bind(key, now(), notes).run();
     return notes;
-  } catch (e) { return ""; }
+  } catch (e) { try { await db.prepare(`INSERT OR REPLACE INTO care_cache (k, ts, body) VALUES (?,?,?)`).bind(key, now(), "").run(); } catch (e2) {} return ""; }
 }
 
 function flowMessage(st, flow) {
@@ -261,10 +262,10 @@ async function runAgentAI(env, st, message, lang, history, db, flow) {
   let notes = "";
   if (db) { const gate = await gateStatus(db, env, AGENT_VERSION); const topic = flow ? (flow.kind === "fix" ? "payment_failed" : "stop_sip") : agentRules(red.text, st).topic; notes = await researchNotes(env, db, topic, { passed: gate.passed || env.RESEARCH === "always" }); }
   const user = agentUserPrompt(st, red.text, lang, history, notes, flow);
-  const ask = async (u, attempt) => { const raw = await callGemini(env, { st, message: red.text, lang, flow, attempt }, { system: agentSystemPrompt(), user: u, schema: AGENT_SCHEMA, mock: env.GEMINI_AGENT_MOCK }); const o = intentFilter(mergeFlowRules(agentNormalise(raw, st), st, flow), red.text, flow); return { out: o, flags: agentGuard(o, st, red.text) }; };
+  const ask = async (u, attempt) => { const raw = await callGemini(env, { st, message: red.text, lang, flow, attempt }, { system: agentSystemPrompt(), user: u, schema: AGENT_SCHEMA, mock: env.GEMINI_AGENT_MOCK, budgetMs: attempt === 1 ? 12000 : Math.max(2000, 20000 - (Date.now() - t0)) }); const o = intentFilter(mergeFlowRules(agentNormalise(raw, st), st, flow), red.text, flow); return { out: o, flags: agentGuard(o, st, red.text) }; };
   let r = await ask(user, 1), repaired = false;
   // Self-correction: if the answer breaks a safety rule, the agent gets one chance to rewrite it before SIP Care falls back to its standard answer.
-  if (r.flags.length) {
+  if (r.flags.length && Date.now() - t0 < 12000) {
     const fix = `${user}\n\nYOUR PREVIOUS ANSWER WAS REJECTED by SIP Care's safety check: ${r.flags.join("; ")}.\nRewrite the whole answer so it breaks none of the RULES: copy every number and date exactly from the ACCOUNT, give no advice, no predictions, no urgency words, no sources.`;
     try { const r2 = await ask(fix, 2); if (!r2.flags.length) { r = r2; repaired = true; } else r = r2; } catch (e) {}
   }

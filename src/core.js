@@ -27,9 +27,18 @@ async function callGemini(env, input, task) {
   if (task.tools) body.tools = task.tools;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   let last = "";
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY }, body: JSON.stringify(body) });
-    const t = await r.text();
+  // Time budget: users must never wait long. Each attempt is cut off, and retries only happen while time is left.
+  const deadline = Date.now() + (task.budgetMs || 18000);
+  const tries = task.noRetry ? 1 : 3;
+  for (let attempt = 0; attempt < tries; attempt++) {
+    const left = deadline - Date.now();
+    if (left < 1500) { last = last || "AI took too long to answer"; break; }
+    const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timer = ctl ? setTimeout(() => ctl.abort(), Math.min(task.attemptMs || 12000, left)) : null;
+    let r, t;
+    try { r = await fetch(url, { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY }, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined }); t = await r.text(); }
+    catch (e) { last = "AI took too long to answer"; if (timer) clearTimeout(timer); continue; }
+    if (timer) clearTimeout(timer);
     if (r.ok) {
       let j; try { j = JSON.parse(t); } catch (e) { throw new Error("Gemini sent a reply that is not JSON"); }
       const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
@@ -40,7 +49,9 @@ async function callGemini(env, input, task) {
     }
     last = errText(r.status, t);
     if (r.status !== 429 && r.status < 500) break;
-    await new Promise(res => setTimeout(res, r.status === 429 ? 6000 * (attempt + 1) : 2500));
+    const wait = r.status === 429 ? 4000 * (attempt + 1) : 1500;
+    if (deadline - Date.now() < wait + 2500) break;
+    await new Promise(res => setTimeout(res, wait));
   }
   throw new Error(last);
 }
