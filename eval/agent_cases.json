@@ -432,15 +432,14 @@
  },
  {
   "id": "Q28",
-  "from": "Edge: amount below minimum",
+  "from": "Edge: amount below minimum (may offer the minimum instead)",
   "lang": "en",
   "message": "Reduce my Bluechip SIP to 200 rupees",
   "topic": [
    "change_sip"
   ],
   "forbid": [
-   "stop_sip",
-   "change_amount"
+   "stop_sip"
   ],
   "type": "chat"
  },
@@ -482,8 +481,9 @@
    "sip_id": "B"
   },
   "topic": [
-   "payment_failed",
-   "autopay"
+   "autopay",
+   "missed_instalment",
+   "payment_failed"
   ],
   "sip": "B",
   "must": [
@@ -512,8 +512,9 @@
    "sip_id": "B"
   },
   "topic": [
-   "payment_failed",
-   "autopay"
+   "autopay",
+   "missed_instalment",
+   "payment_failed"
   ],
   "sip": "B",
   "must": [
@@ -538,8 +539,9 @@
    "sip_id": "B"
   },
   "topic": [
-   "payment_failed",
-   "autopay"
+   "autopay",
+   "missed_instalment",
+   "payment_failed"
   ],
   "sip": "B",
   "state_patch": {
@@ -567,8 +569,9 @@
    "sip_id": "B"
   },
   "topic": [
-   "payment_failed",
-   "autopay"
+   "autopay",
+   "missed_instalment",
+   "payment_failed"
   ],
   "sip": "B",
   "must": [
@@ -596,8 +599,9 @@
    "sip_id": "B"
   },
   "topic": [
-   "payment_failed",
-   "autopay"
+   "autopay",
+   "missed_instalment",
+   "payment_failed"
   ],
   "sip": "B",
   "must": [
@@ -621,8 +625,9 @@
    "sip_id": "B"
   },
   "topic": [
-   "payment_failed",
-   "autopay"
+   "autopay",
+   "missed_instalment",
+   "payment_failed"
   ],
   "sip": "B",
   "must": [
@@ -651,14 +656,15 @@
    "reason": "growth"
   },
   "topic": [
-   "stop_sip",
-   "growth",
-   "change_sip",
-   "withdraw",
-   "how_to",
-   "payment_failed",
    "autopay",
-   "is_money_safe"
+   "change_sip",
+   "growth",
+   "how_to",
+   "is_money_safe",
+   "missed_instalment",
+   "payment_failed",
+   "stop_sip",
+   "withdraw"
   ],
   "sip": "B",
   "must": [
@@ -684,14 +690,15 @@
    "reason": "money_tight"
   },
   "topic": [
-   "stop_sip",
-   "growth",
-   "change_sip",
-   "withdraw",
-   "how_to",
-   "payment_failed",
    "autopay",
-   "is_money_safe"
+   "change_sip",
+   "growth",
+   "how_to",
+   "is_money_safe",
+   "missed_instalment",
+   "payment_failed",
+   "stop_sip",
+   "withdraw"
   ],
   "sip": "B",
   "must": [
@@ -717,14 +724,15 @@
    "reason": "payment_trouble"
   },
   "topic": [
-   "stop_sip",
-   "growth",
-   "change_sip",
-   "withdraw",
-   "how_to",
-   "payment_failed",
    "autopay",
-   "is_money_safe"
+   "change_sip",
+   "growth",
+   "how_to",
+   "is_money_safe",
+   "missed_instalment",
+   "payment_failed",
+   "stop_sip",
+   "withdraw"
   ],
   "sip": "B",
   "must": [
@@ -745,14 +753,15 @@
    "reason": "need_money"
   },
   "topic": [
-   "stop_sip",
-   "growth",
-   "change_sip",
-   "withdraw",
-   "how_to",
-   "payment_failed",
    "autopay",
-   "is_money_safe"
+   "change_sip",
+   "growth",
+   "how_to",
+   "is_money_safe",
+   "missed_instalment",
+   "payment_failed",
+   "stop_sip",
+   "withdraw"
   ],
   "sip": "A",
   "must": [
@@ -775,14 +784,15 @@
    "reason": "dont_understand"
   },
   "topic": [
-   "stop_sip",
-   "growth",
-   "change_sip",
-   "withdraw",
-   "how_to",
-   "payment_failed",
    "autopay",
-   "is_money_safe"
+   "change_sip",
+   "growth",
+   "how_to",
+   "is_money_safe",
+   "missed_instalment",
+   "payment_failed",
+   "stop_sip",
+   "withdraw"
   ],
   "sip": "C",
   "must": [
@@ -806,14 +816,15 @@
    "text": "Returns are too low, my FD gives more. Should I just put it in FD?"
   },
   "topic": [
-   "stop_sip",
-   "growth",
-   "change_sip",
-   "withdraw",
-   "how_to",
-   "payment_failed",
    "autopay",
-   "is_money_safe"
+   "change_sip",
+   "growth",
+   "how_to",
+   "is_money_safe",
+   "missed_instalment",
+   "payment_failed",
+   "stop_sip",
+   "withdraw"
   ],
   "sip": "B",
   "must": [
