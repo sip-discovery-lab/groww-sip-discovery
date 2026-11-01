@@ -3,7 +3,7 @@ import { makeD1 } from "./d1.mjs";
 import fs from "node:fs";
 import { makeAgentMock, researchMock } from "./agent_mock.mjs";
 const W = (await import("../dist/worker.js?" + Date.now())).default;
-const lib = new Function(["guard", "facts", "core", "agent", "events"].map(f => fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), "utf8")).join("\n") + "; return { agentRules, agentFlowRules, rulesLinks, intentFilter, demoState, stateWith, agentNormalise, agentGuard, agentPlan, agentScore, injectSituation, monitorTick };")();
+const lib = new Function(["guard", "facts", "core", "agent", "events"].map(f => fs.readFileSync(new URL(`../src/${f}.js`, import.meta.url), "utf8")).join("\n") + "; return { agentRules, agentFlowRules, rulesLinks, intentFilter, demoState, stateWith, agentNormalise, agentGuard, agentPlan, agentScore, injectSituation, monitorTick, firstYear, agentView, runSipDay };")();
 let pass = 0, fail = 0; const F = [];
 const t = (n, c, i) => { if (c) pass++; else { fail++; F.push(n + (i !== undefined ? " :: " + JSON.stringify(i).slice(0, 700) : "")); } };
 const mode = { m: "ok" };
@@ -33,6 +33,7 @@ t("portfolio numbers", st.sips.map(s => s.invested).join() === "6000,8000,1000" 
 let r = await call("/"); t("app page", r.status === 200 && /SIP Care/.test(r.body) && /not an official Groww product/.test(r.body));
 r = await call("/sw.js"); t("service worker", /addEventListener\("push"/.test(r.body) && /#\/note\//.test(r.body));
 r = await call("/quality"); t("quality page", /How SIP Care is tested/.test(r.body));
+r = await call("/discovery"); t("discovery report page", r.status === 200 && /325/.test(r.body) && /quit after one failed instalment/.test(r.body));
 
 // ---- launch: everything normal ----
 r = await call("/api/agent/start", {}); let sid = r.body.session_id; let v = r.body.view;
@@ -162,7 +163,7 @@ r = await call("/api/agent/situation", { session_id: sid, kind: "bogus" });
 t("unknown situation -> 400", r.status === 400);
 
 // ---- gate pass: AI path, research, guards ----
-await DB.prepare(`INSERT INTO eval_runs (id, ts, model, prompt_version, n, passed, breaks, score, gate, complete, errors) VALUES ('g1', ?, 'gemini-3.5-flash-lite', 'agent-v5', 47, 47, 0, 1, 1, 1, 0)`).bind(new Date().toISOString()).run();
+await DB.prepare(`INSERT INTO eval_runs (id, ts, model, prompt_version, n, passed, breaks, score, gate, complete, errors) VALUES ('g1', ?, 'gemini-3.5-flash-lite', 'agent-v6', 53, 53, 0, 1, 1, 1, 0)`).bind(new Date().toISOString()).run();
 r = await call("/api/agent/start", { reset: true }); sid = r.body.session_id;
 t("gate passed visible", r.body.gate.passed === true);
 b = await ask(sid, "When will I get the money if I withdraw from my Bluechip fund?");
@@ -238,13 +239,13 @@ t("failed SIP payment pushes an alert at once", pushes.length === before + 1);
 // ---- quality gate with the oracle mock ----
 r = await call("/api/eval/start", { suite: "agent" });
 if (r.status === 429) { await DB.prepare(`DELETE FROM eval_runs`).run(); r = await call("/api/eval/start", { suite: "agent" }); }
-t("eval start", r.body.ok && r.body.cases.length === 47, r.body);
+t("eval start", r.body.ok && r.body.cases.length === 53, r.body);
 const fails = [];
 for (const id of r.body.cases) { const c = (await call("/api/eval/case", { run_id: r.body.run_id, case_id: id })).body.case; if (!c.ok) fails.push(id + ": " + c.reasons + " :: " + c.summary.slice(0, 160)); }
 const fin = (await call("/api/eval/finish", { run_id: r.body.run_id })).body;
 t("gate passes with good model", fin.gate === true, fails);
 r = await call("/api/eval?suite=agent");
-t("latest shows meta", r.body.case_meta && r.body.case_meta.length === 47 && r.body.cases.length === 47);
+t("latest shows meta", r.body.case_meta && r.body.case_meta.length === 53 && r.body.cases.length === 53);
 
 // ---- the standard (rule-based) agent on the gate cases ----
 const cases = JSON.parse(fs.readFileSync(new URL("../eval/agent_cases.json", import.meta.url), "utf8"));
@@ -259,5 +260,14 @@ for (const c of cases) {
 }
 t("standard answers pass English gate cases", rb.length === 0, rb);
 
+// ---- first year (from the account only; no predictions) ----
+{ const st = lib.demoState(IST(2026, 9, 25)); const B = st.sips.find(s => s.id === "B"); const y = lib.firstYear(B, st);
+  t("first year: 4 paid, avg 2.5 months by date, down 88", y.paid === 4 && y.avg_months === 2.5 && /down ₹88/.test(y.move) && y.held.length === 4 && y.held[0].months === 4 && y.held[3].months === 1, y);
+  t("first year line has no prediction", /no one can promise/.test(y.line) && !/will (grow|rise|double)/.test(y.line));
+  t("view carries year1 per SIP", lib.agentView(st).sips.every(s => s.year1 && s.year1.paid > 0));
+  const st2 = lib.stateWith(["sip_low_balance"]); const fx = lib.agentFlowRules(st2, { kind: "fix", sip_id: "B" });
+  t("fix plan includes the first-year line", fx.next.some(x => /first year so far/i.test(x)), fx.next);
+  const st3 = lib.demoState(IST(2026, 9, 25)); const obs = lib.runSipDay(st3, "low_balance"); const f = obs.find(o => o.kind === "payment_failed");
+  t("failure alert carries the first-year line", f && /on average your money has been in/.test(f.year1), f && f.year1); }
 console.log(`agent: ${pass} passed, ${fail} failed`);
 if (fail) { console.log(F.join("\n")); process.exit(1); }
