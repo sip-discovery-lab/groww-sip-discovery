@@ -288,10 +288,18 @@ async function newSession(db, env) { const st = demoState(env.NOW_MS ? Number(en
 async function agentStart(req, env, db) {
   const b = await readJson(req);
   let s = b.reset ? null : await loadSession(db, String(b.session_id || ""));
-  if (!s) { s = await newSession(db, env); if (AGENT_LANGS.includes(b.lang)) s.state.lang = b.lang; await saveSession(db, s); }
+  let fresh = [];
+  if (!s) {
+    s = await newSession(db, env); if (AGENT_LANGS.includes(b.lang)) s.state.lang = b.lang;
+    // The demo opens on the SIP date with a failed payment, so the tester sees SIP Care's instant alert first.
+    // "normal" (or ?demo=normal in the app) opens a clean account instead.
+    const sc = b.scenario === "normal" ? "" : SITUATIONS_DEMO[b.scenario] ? b.scenario : (env.START_SCENARIO === "normal" ? "" : env.START_SCENARIO || "sip_low_balance");
+    if (sc) { fresh = injectSituation(s.state, sc); record(s, fresh); }
+    await saveSession(db, s);
+  }
   const gate = await gateStatus(db, env, AGENT_VERSION);
   await careLog(db, s.id, b.reset ? "reset" : "start", {});
-  return cjson(Object.assign(agentPayload(s, gate), { fresh: [] }));
+  return cjson(Object.assign(agentPayload(s, gate), { fresh: fresh.map(obsSummary) }));
 }
 
 function obsSummary(o) { return { id: o.id, kind: o.kind, title: o.title, notify: o.notify, level: o.level, status: o.status, ask: o.ask || "" }; }

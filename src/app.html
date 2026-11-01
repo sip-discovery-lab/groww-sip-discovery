@@ -321,9 +321,9 @@ function home() {
     <div class="sectionh"><h3>Your SIPs</h3><span class="muted">${v.sips.length} SIPs</span></div>
     ${v.sips.map(x => `<button class="rowbtn" data-go="sip/${x.id}">${fundRow(x)}</button>`).join("")}
     ${alertsCard()}
-    <details class="tester"><summary>${ic("flask")} For testers: try a situation</summary><p class="muted" style="margin:6px 0 10px">Your account is normal. Jump to your next SIP date (the ${nth(26)}) and choose what happens, to see SIP Care alert you the moment a payment fails and help you decide.</p><div style="display:flex;flex-direction:column;gap:8px">${S.situations.map(x => `<button class="btn sec" style="height:40px" data-sit="${x.id}">${esc(x.label)}</button>`).join("")}</div></details>
+    <details class="tester"><summary>${ic("flask")} For testers: try a situation</summary><p class="muted" style="margin:6px 0 10px">Start the demo again on the SIP date (the ${nth(26)}) with a different cause, or with no problem.</p><div style="display:flex;flex-direction:column;gap:8px">${[["sip_low_balance", "Payment fails: low balance"], ["sip_autopay", "Payment fails: AutoPay expired"], ["sip_bank_error", "Payment fails: bank error"], ["normal", "No problem: a normal account"]].map(([k, l]) => `<button class="btn sec" style="height:40px" data-restart="${k}">${l}</button>`).join("")}<button class="btn ghost" style="height:40px" data-sit="units_pending">Also try: money debited, units not showing</button></div></details>
     <div class="card" style="background:var(--subtle);border:0"><div class="row" style="align-items:flex-start">${ic("health_and_safety")}<div><div style="font-weight:600;font-size:14px">How SIP Care works</div><div class="muted" style="margin-top:2px">You ask, SIP Care checks your SIPs, payments and orders plus the SIP rules, and answers for you. It does safe steps itself (track an order, set a reminder, draft a support message) and asks you before anything that moves money or changes a SIP. It keeps checking in the background and tells you when things finish.</div></div></div></div>
-    <div class="foot"><a class="link" href="/quality" target="_blank" rel="noopener">How SIP Care is tested</a><button class="link" data-act="reset">Reset demo</button></div>
+    <div class="foot"><a class="link" href="/quality" target="_blank" rel="noopener">How SIP Care is tested</a><button class="link" data-act="reset">Restart demo</button></div>
     <p class="muted" style="text-align:center;margin:0">Concept prototype for a Groww case study · not an official Groww product · demo data · not investment advice</p>
   </main>${navBar()}`;
 }
@@ -472,7 +472,7 @@ function care() {
   return `${topInner(`SIP Care <span class="aitag">AI agent</span>`, `<div class="lang" role="group" aria-label="Language">${langBtns}</div>`)}
   <main style="padding-bottom:170px">
     ${empty ? `<div class="hero" style="padding-top:6px"><div class="halo" style="width:64px;height:64px">${ic("shield_with_heart")}</div><h2 style="margin:0">What would you like to check?</h2><p class="muted" style="margin:0">Pick a topic or type any question about your SIPs. I'll look at your account and the SIP rules and answer for you.</p></div>` : ""}
-    ${v.needs_you.length && empty ? `<div class="card issue" style="padding:12px"><div style="font-size:13px;font-weight:600;color:var(--amber);margin-bottom:8px">I noticed something on your account</div>${v.needs_you.map(o => `<button class="obs" data-ask="${esc(o.ask)}"><span class="oi warn">${ic((KIND_ICON[o.kind] || ["info"])[0])}</span><span style="flex:1;text-align:left"><b style="font-size:14px">${esc(o.title)}</b><span class="muted" style="display:block">Tap to check it with me</span></span>${ic("arrow_forward", "chev")}</button>`).join("")}</div>` : ""}
+    ${v.needs_you.length && empty ? `<div class="card issue" style="padding:12px"><div style="font-size:13px;font-weight:600;color:var(--amber);margin-bottom:8px">I noticed something on your account</div>${v.needs_you.map(o => `<button class="obs" ${o.options ? `data-note="${o.id}"` : `data-ask="${esc(o.ask)}"`}><span class="oi warn">${ic((KIND_ICON[o.kind] || ["info"])[0])}</span><span style="flex:1;text-align:left"><b style="font-size:14px">${esc(o.title)}</b><span class="muted" style="display:block">Tap to check it with me</span></span>${ic("arrow_forward", "chev")}</button>`).join("")}</div>` : ""}
     ${empty ? `<div class="topics">${TOPICS.map((t, i) => `<button class="topic" data-topic="${i}"><span class="oi">${ic(t[0])}</span>${t[1]}</button>`).join("")}</div>` : ""}
     <div class="thread">${S.chat.map(renderChat).join("")}${S.busy ? workBox() : ""}</div>
     ${!empty && !S.busy ? `<button class="link" data-act="topics" style="align-self:flex-start">${ic("help")} Ask about something else</button>` : ""}
@@ -601,13 +601,15 @@ async function enableAlerts() {
 
 // ---------------- data + loop ----------------
 function apply(r) { if (!r || !r.ok) return; S.view = r.view; S.pending = r.pending || []; if (r.gate) S.gate = r.gate; if (r.situations) S.situations = r.situations; if (r.next_tick_ms) S.nextTickMs = r.next_tick_ms; }
-async function start(reset) {
-  const r = await post("/api/agent/start", { session_id: reset ? "" : S.session, reset: !!reset, lang: S.lang });
+const DEMO = (new URLSearchParams(location.search).get("demo") || "").replace(/-/g, "_");
+async function start(reset, scenario) {
+  const r = await post("/api/agent/start", { session_id: reset ? "" : S.session, reset: !!reset, lang: S.lang, scenario: scenario || (DEMO === "normal" ? "normal" : DEMO ? "sip_" + DEMO.replace(/^sip_/, "") : undefined) });
   if (!r.ok) { $("#app").innerHTML = `<main><div class="notice" style="margin-top:20px">${esc(r.error || "Can't load the demo.")}</div></main>`; return false; }
   S.session = r.session_id; store.set("sipcare_session", r.session_id);
   if (reset) { S.chat = []; S.lastFix = null; S.fbDone = false; store.set("sipcare_fb", "0"); S.seenObs = new Set(); }
   apply(r); S.lastTickAt = Date.now();
-  (r.view.observations || []).forEach(o => S.seenObs.add(o.id));
+  (r.view.observations || []).forEach(o => { if (!(r.fresh || []).some(f => f.id === o.id)) S.seenObs.add(o.id); });
+  setTimeout(() => announce(r.fresh), 400);
   return true;
 }
 async function tick(force) {
@@ -689,6 +691,7 @@ function wire() {
     if (k === "withdraw_all") proposeAndConfirm({ type: "redeem", sip_id: id, all: true });
     if (k === "ticket") proposeAndConfirm({ type: "send_ticket", sip_id: $("#tkSip").value, subject: $("#tkSub").value || "Support request", body: $("#tkBody").value });
   });
+  document.querySelectorAll("[data-restart]").forEach(b => b.onclick = async () => { await start(true, b.dataset.restart); go("home"); });
   document.querySelectorAll("[data-sit]").forEach(b => b.onclick = async () => { b.disabled = true; const r = await post("/api/agent/situation", { session_id: S.session, kind: b.dataset.sit }); apply(r); if (r.ok && r.fresh && r.fresh.length) { announce(r.fresh); window.scrollTo(0, 0); } else if (r.ok) toast({ title: "Nothing changed", notify: r.note || "That situation can't apply right now." }); render(); });
   document.querySelectorAll("[data-act]").forEach(b => b.onclick = async () => {
     const a = b.dataset.act;
