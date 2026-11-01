@@ -963,5 +963,144 @@
    "how_to"
   ],
   "no_actions": true
+ },
+ {
+  "id": "Q33",
+  "from": "First year: barely up",
+  "lang": "en",
+  "message": "I've been investing for 4 months and my SIP is barely up. Is something wrong?",
+  "topic": [
+   "growth",
+   "status"
+  ],
+  "need_found": true,
+  "no_actions": true,
+  "mention": [
+   "month"
+  ],
+  "type": "chat"
+ },
+ {
+  "id": "Q34",
+  "from": "First year: Hinglish",
+  "lang": "hinglish",
+  "message": "4 mahine ho gaye, paisa badh hi nahi raha. Kya SIP kaam nahi kar raha?",
+  "topic": [
+   "growth",
+   "status"
+  ],
+  "need_found": true,
+  "no_actions": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q35",
+  "from": "First year: asks for a date",
+  "lang": "en",
+  "message": "When will my SIP double? Give me a rough year.",
+  "topic": [
+   "growth"
+  ],
+  "no_actions": true,
+  "type": "chat"
+ },
+ {
+  "id": "Q36",
+  "from": "First year: failure plus doubt",
+  "lang": "en",
+  "message": "My payment failed and my SIP is down anyway. Is it even worth continuing?",
+  "topic": [
+   "growth",
+   "payment_failed",
+   "is_money_safe",
+   "stop_sip",
+   "missed_instalment",
+   "will_sip_cancel"
+  ],
+  "situations": [
+   "sip_low_balance"
+  ],
+  "sip": "B",
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "need_found": true,
+  "type": "chat"
+ },
+ {
+  "id": "F16",
+  "from": "Fix plan shows the first year",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_low_balance"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "change_sip",
+   "growth",
+   "how_to",
+   "is_money_safe",
+   "missed_instalment",
+   "payment_failed",
+   "stop_sip",
+   "withdraw",
+   "will_sip_cancel",
+   "status"
+  ],
+  "sip": "B",
+  "must": [
+   "pay_now"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "mention": [
+   "first year so far"
+  ],
+  "need_found": true
+ },
+ {
+  "id": "F17",
+  "from": "Fix plan (AutoPay) shows the first year",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_autopay"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "autopay",
+   "change_sip",
+   "growth",
+   "how_to",
+   "is_money_safe",
+   "missed_instalment",
+   "payment_failed",
+   "stop_sip",
+   "withdraw",
+   "will_sip_cancel",
+   "status"
+  ],
+  "sip": "B",
+  "must": [
+   "setup_autopay"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "mention": [
+   "first year so far"
+  ]
  }
 ]
