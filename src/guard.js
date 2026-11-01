@@ -21,7 +21,7 @@ const BANNED = [
   ["fund or category named", /\b(nifty|sensex|index fund|small ?cap|mid ?cap|large ?cap|flexi ?cap|multi ?cap|elss|liquid fund|debt fund|hybrid fund|gold fund|parag parikh|mirae|nippon|motilal|quant (mutual|fund)|aditya birla sun life)\b/i],
   ["fund house named", /\b(hdfc|sbi|icici|axis|kotak|uti|tata|dsp|edelweiss|franklin)\s+(mutual fund|mf|amc|\w+\s+fund|fund)\b/i],
   ["return or market prediction", /\b(guarantee[sd]?|will (grow|rise|recover|go up|double|give)|market will|returns? will|expected returns?|\d+\s?%\s*(return|cagr|p\.?a))\b/i],
-  ["fear or urgency", /\b(immediately|right away|act now|hurry|urgent(ly)?|before it'?s too late|last chance|don'?t miss|you will lose|lose (all|everything)|asap|turant|jaldi|jald se jald)\b|तुरंत|जल्दी/i],
+  ["fear or urgency", /\b(immediately|right away|act now|hurry|urgent(ly)?|before it'?s too late|last chance|don'?t miss|you will lose|lose (all|everything)|asap|turant|jaldi (se|karo|karein|kariye|kijiye|kar lo|kar lijiye)|jald se jald)\b|तुरंत|जल्दी (से|करें|करो|कीजिए)|जल्द से जल्द/i],
   ["asks for personal data", /\b(share|send|give|provide|enter|batao|bhejo)\s+(me\s+)?(your|apna|apni)?\s*(pan|account number|bank account|otp|pin|password|screenshot|aadhaar)\b/i],
   ["repeats personal data", /\b[A-Z]{5}\d{4}[A-Z]\b|\b\d{9,18}\b/],
 ];
