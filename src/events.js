@@ -52,7 +52,7 @@ function runSipDay(st, outcome) {
       if (reason === "mandate_limit") why.push(s.note);
       if (reason === "debited_not_allotted") { why.push(`${rupees(s.amount)} left your bank account on ${date}`); s.order = { id: `SIP-B${y}${m + 1}${d}`, status: "refund_pending", debited: date, ticks: 4, amount: s.amount }; }
       const debited = reason === "debited_not_allotted";
-      failObs = makeObs(st, "payment_failed", s, { level: "alert", status: "open", options: true, reason,
+      failObs = makeObs(st, "payment_failed", s, { level: "alert", status: "open", options: true, reason, year1: firstYear(s, st).line,
         title: debited ? `${rupees(s.amount)} debited, units not added` : `${rupees(s.amount)} SIP payment failed today`,
         what: debited ? `Your ${s.fund} instalment of ${rupees(s.amount)} was debited on ${date}, but the fund house didn't confirm the order, so no units were added.` : `Your ${s.fund} instalment of ${rupees(s.amount)} on ${date} didn't go through, so no units were bought for this month.`,
         why, impact: debited ? `Your money isn't lost: if the order isn't confirmed it's refunded to ${st.bank} in 5-7 business days. Your ${rupees(s.value)} already invested is safe.` : `Your ${rupees(s.value)} already invested is safe and your SIP is still active. One missed month doesn't cancel it; 3 in a row would.`,

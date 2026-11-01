@@ -90,6 +90,9 @@ nav.bottom div.on{color:var(--green-ink)}
 .sheet{width:100%;max-width:430px;background:var(--card);border-radius:20px 20px 0 0;padding:14px 16px 20px;max-height:88vh;overflow:auto}
 .handle{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
 .kv{border:1px solid var(--line);border-radius:12px;margin-top:10px}
+.ystats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:8px}.ystats div{background:var(--subtle);border-radius:10px;padding:10px}.ystats b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.ystats span{display:block;font-size:12px}
+.yrow{display:grid;grid-template-columns:110px 1fr 48px;gap:8px;align-items:center;font-size:13px;margin:4px 0}.ytrack{height:10px;background:var(--line);border-radius:5px;overflow:hidden}.ytrack i{display:block;height:100%;background:var(--green);border-radius:5px}.yrow span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.linkbtn{background:none;border:0;padding:0;margin-top:6px;color:var(--green-ink);font:inherit;font-weight:600;cursor:pointer}
 .kv div{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;font-size:13px;border-top:1px solid var(--line)}
 .kv div:first-child{border-top:0}
 .kv span:first-child{color:var(--muted)}
@@ -313,7 +316,7 @@ const KIND_ICON = { refunded: ["wallet", "ok"], payment_failed: ["payments", "wa
 
 // Website layout: one top navigation bar for every page, a footer, no mobile tab bar.
 function navBar() {
-  return `<footer class="sitefoot"><div class="wrap row" style="justify-content:space-between;flex-wrap:wrap;gap:10px"><span class="muted">Concept prototype for a Groww case study · not an official Groww product · demo data · not investment advice</span><span class="row" style="gap:16px"><a class="link" href="/quality" target="_blank" rel="noopener">How SIP Care is tested</a><button class="link" data-act="reset">Restart demo</button></span></div></footer>`;
+  return `<footer class="sitefoot"><div class="wrap row" style="justify-content:space-between;flex-wrap:wrap;gap:10px"><span class="muted">Concept prototype for a Groww case study · not an official Groww product · demo data · not investment advice</span><span class="row" style="gap:16px"><a class="link" href="/discovery" target="_blank" rel="noopener">Discovery report</a><a class="link" href="/quality" target="_blank" rel="noopener">How SIP Care is tested</a><button class="link" data-act="reset">Restart demo</button></span></div></footer>`;
 }
 function siteHeader() {
   const v = S.view;
@@ -417,6 +420,7 @@ function noteScreen(id) {
     <section class="an"><h4>${ic("info")} What happened</h4><p>${esc(o.what)}</p></section>
     ${o.why && o.why.length ? `<section class="an"><h4>${ic("analytics")} What SIP Care checked</h4><ul>${o.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul></section>` : ""}
     ${o.impact ? `<section class="an"><h4>${ic("verified_user")} What it means for you</h4><p>${esc(o.impact)}</p></section>` : ""}
+    ${o.year1 ? `<section class="an"><h4>${ic("analytics")} Your first year so far</h4><p>${esc(o.year1)}</p>${o.sip_id ? `<button class="linkbtn" data-go="sip/${o.sip_id}">See your first year →</button>` : ""}</section>` : ""}
     ${o.options && ["open", "in_progress"].includes(o.status) ? optionsBlock(o) : ""}
     ${!o.options && o.status === "open" && o.ask ? `<button class="btn" data-ask="${esc(o.ask)}">${ic("shield_with_heart")} Ask SIP Care what to do</button>` : ""}
   </main>${navBar()}`;
@@ -513,6 +517,17 @@ function page(title, body, wide) { return `${topInner(title)}<main class="wrap $
 const kv = rows => `<div class="kv">${rows.map(([k, val]) => `<div><span>${esc(k)}</span><span>${val}</span></div>`).join("")}</div>`;
 const instRow = i => `<div class="row" style="justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)"><span>${esc(i.date)}</span><span class="chip ${i.status === "paid" ? "ok" : i.status === "failed" ? "warn" : i.status === "skipped" ? "mutedc" : "info"}">${i.status === "processing" ? "Units on the way" : i.status[0].toUpperCase() + i.status.slice(1)}</span><b>${inr(i.amount)}</b></div>`;
 function sipsPage() { const v = S.view; return page("My SIPs", `<div class="card">${sipTable(v)}</div>`, true); }
+// First year: what's in, what it's worth and how long each instalment has been invested. From the account only; no predictions.
+function yearCard(s) {
+  const y = s.year1; if (!y || !y.paid) return "";
+  const max = Math.max(1, ...y.held.map(h => h.months));
+  return `<div class="card" id="yearCard"><h3>Your first year so far</h3>
+    <div class="ystats"><div><span class="muted">Put in</span><b>${inr(y.invested)}</b></div><div><span class="muted">Worth today</span><b>${inr(y.value)}</b><span class="muted">${esc(y.move)}</span></div><div><span class="muted">Average time invested</span><b>${esc(y.avg_text.replace(/^about /, "~"))}</b></div></div>
+    <div class="muted" style="font-size:13px;margin:12px 0 6px">How long each instalment has been invested</div>
+    ${y.held.map(h => `<div class="yrow"><span>${esc(h.date)}</span><span class="ytrack"><i style="width:${Math.max(3, Math.round(100 * h.months / max))}%"></i></span><span>${h.months ? h.months + " mo" : "new"}</span></div>`).join("")}
+    <p class="muted" style="font-size:13px;margin:10px 0 0">Each instalment is invested on its own date, so in year one most of your money has been in for only a few months. Small ups and downs are normal; no one can promise when it grows. Not investment advice.</p>
+    <button class="btn sec" style="height:40px;margin-top:10px" data-ask="Why isn't my ${esc(short(S.view, s.id))} SIP growing?">${ic("shield_with_heart")} Ask SIP Care about it</button></div>`;
+}
 function sipPage(id) {
   const s = sipOf(id); if (!s) return loading();
   const failed = s.instalments.find(i => i.status === "failed");
@@ -527,6 +542,7 @@ function sipPage(id) {
       <div class="row" style="gap:8px;margin-top:8px"><button class="btn sec" style="height:40px" data-go="autopay/${id}">AutoPay</button><button class="btn sec" style="height:40px" data-go="withdraw/${id}">Withdraw</button></div>
       ${s.status === "paused" ? `<button class="btn sec" style="height:40px;margin-top:8px" data-page="resume" data-sip="${id}">Restart SIP</button>` : ""}
       ${["active", "paused"].includes(s.status) ? `<button class="btn ghost" style="margin-top:8px" data-opt="cancel" data-sip="${id}">Cancel SIP</button>` : ""}</div>
+    ${yearCard(s)}
     <div class="card"><h3>Instalments</h3>${s.instalments.map(instRow).join("")}</div>
     <button class="btn ghost" data-sipask="${id}">${ic("shield_with_heart")} Ask SIP Care about this SIP</button></div></div>`, true);
 }

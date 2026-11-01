@@ -1,7 +1,7 @@
 // SIP Care agent (v3): the user asks anything about their SIPs; the agent reads the account,
 // checks SIP rules and platform guidelines, answers with evidence, does safe steps itself,
 // and asks the user to confirm anything that moves money or changes a SIP.
-const AGENT_VERSION = "agent-v5";
+const AGENT_VERSION = "agent-v6";
 const AGENT_LANGS = ["en", "hinglish", "hi"];
 
 const AUTO_ACTIONS = ["track_order", "set_reminder", "draft_ticket"];
@@ -88,7 +88,7 @@ function snapshot(st) {
   return {
     today: st.today, last_instalment_date: st.last_sip, next_instalment_date: st.next_sip, bank: st.bank, note: "The app cannot see the user's bank balance, salary or other apps.",
     sips: st.sips.map(s => ({ id: s.id, fund: s.fund, plan: s.plan, category: s.category, monthly_amount: s.amount, sip_date: nth(s.day), status: s.status, autopay: s.autopay, autopay_limit: s.mandate_limit || null, started: s.started,
-      instalments_paid: s.instalments.filter(i => i.status === "paid").length, last_instalments: s.instalments.slice(-3), invested: s.invested, current_value: s.value, gain: s.value - s.invested, units: s.units, nav: s.nav,
+      instalments_paid: s.instalments.filter(i => i.status === "paid").length, avg_months_invested: firstYear(s, st).avg_months, last_instalments: s.instalments.slice(-3), invested: s.invested, current_value: s.value, gain: s.value - s.invested, units: s.units, nav: s.nav,
       exit_load: s.exit_note, lock_in: s.lock_in, min_sip: s.min_sip, order: s.order, skip_next: s.skip_next, new_date_from_next_cycle: s.new_day, new_amount_from_next_cycle: s.new_amount })),
     redemptions: st.redemptions.map(r => ({ sip_id: r.sip_id, amount: r.amount, status: r.status })),
     recent_agent_updates: (st.observations || []).slice(0, 4).map(o => `${o.title} (${o.status})`),
@@ -108,6 +108,7 @@ const GUIDELINES = [
   "Exit load: many equity funds charge about 1% if units are redeemed within 1 year of each instalment; index funds often have none. Each SIP instalment has its own holding period.",
   "Tax on equity funds: units held up to 12 months are short-term, taxed at 20%; held over 12 months are long-term, taxed at 12.5% on total long-term gains above ₹1.25 lakh in a financial year. Each instalment's holding period is counted separately (first in, first out). Tax applies only when units are redeemed, and only on gains. ELSS has a 3-year lock-in per instalment.",
   "Growth: mutual fund values are market-linked and move up and down; no one can promise when or how much they will grow. The value grows when the fund's NAV rises. Equity funds are generally meant for long holding periods. Past performance does not guarantee future returns.",
+  "Early SIP value (first year): each instalment is invested on its own date, so after n monthly instalments the money has been in for only (n-1)/2 months on average (avg_months_invested in the account). That is why value moves only a little, up or down, in the first year. Explain with the user's own instalments paid, money in, value now and average months invested; never predict when or how much it will grow.",
   "Statements and holdings can be seen in the app's portfolio; a consolidated account statement covers all folios.",
 ];
 
@@ -142,7 +143,7 @@ GUIDED FLOWS (when a FLOW block is present)
   * money debited but the order not confirmed: track_order (automatic) and send_ticket; explain the money is refunded in 5-7 business days if the order fails. Do NOT propose pay_now. Link orders and support.
   Never propose stop_sip or redeem in this flow.
 - cancel_reason: the user wants to CANCEL and told you why. Respond to that reason with care, no pressure, then recommend:
-  * not seeing growth: explain with their own invested vs current value and number of instalments that early values move little because only a few instalments are invested; no promises. Offer continue (no action needed) or pause.
+  * not seeing growth: explain with their own invested vs current value, number of instalments and avg_months_invested that early values move little because each instalment went in on its own date and the money has been in only a short time; no promises. Offer continue (no action needed) or pause.
   * money tight: skip_next or pause (1-3 months) keeps the SIP alive.
   * payment trouble: fix the cause with the app's tools (setup_autopay / pay_now / a date change they choose).
   * need money: they can withdraw only what they need without stopping (link withdraw); or stop.
@@ -314,7 +315,7 @@ function agentRules(message, st) {
     const s = id ? sipById(st, id) : null;
     return R("stop_sip", s ? s.id : "", (s ? [s] : st.sips).map(x => `${x.fund}: ${rupees(x.amount)} on the ${nth(x.day)}, value ${rupees(x.value)}`), `Stopping a SIP only stops future instalments; your ${s ? rupees(s.value) : "invested money"} stays invested until you withdraw it. A stop is processed within 2 working days. ${s ? "Confirm below if you want to stop it." : "Which SIP would you like to stop?"} You can also skip one instalment or change the amount instead.`, [], s ? [{ type: "stop_sip", sip_id: s.id }] : [], ["Can I skip one month instead?", "How do I withdraw?"]);
   }
-  if (/(grow|growth|returns?|profit|badhega|double|how much will|increase in value)/.test(m)) return R("growth", "", [`Invested ${rupees(tot.inv)}, value now ${rupees(tot.val)}`].concat(st.sips.map(s => `${s.fund}: ${rupees(s.invested)} → ${rupees(s.value)}`)), `Growth can't be promised or timed: fund values move with the market, up and down. Your value goes up when the fund's NAV rises. Right now you have invested ${rupees(tot.inv)} and it is worth ${rupees(tot.val)}. Equity funds are generally meant for long holding periods.`, [], [], ["What is NAV?", "Will I pay tax when I withdraw?"]);
+  if (/(grow|growth|returns?|profit|badh|double|how much will|increase in value|barely up|not (going )?up|is it working|kaam nahi|in loss)/.test(m)) { const avg = Math.round(2 * st.sips.reduce((a, s) => a + s.invested * firstYear(s, st).avg_months, 0) / Math.max(1, tot.inv)) / 2; return R("growth", "", [`Invested ${rupees(tot.inv)}, value now ${rupees(tot.val)}`].concat(st.sips.map(s => `${s.fund}: ${rupees(s.invested)} → ${rupees(s.value)}, ${firstYear(s, st).paid} instalments`)), `Growth can't be promised or timed: fund values move with the market, up and down. Right now you have invested ${rupees(tot.inv)} and it is worth ${rupees(tot.val)}. Each instalment is invested on its own date, so on average your money has been in for ${monthsText(avg)}; in the first year that's too short for much change, so small ups and downs are normal. Equity funds are generally meant for long holding periods.`, [], [], ["What is NAV?", "Will I pay tax when I withdraw?"]); }
   if (/(safe|lost|doob|surakshit|सुरक्षित)/.test(m)) return R("is_money_safe", "", [`Invested ${rupees(tot.inv)} across 3 SIPs`, `Value now ${rupees(tot.val)}`], "Yes. Your units are held in your name with each fund house. A failed or missed instalment doesn't affect units you already hold. Values move with the market.", [], [], ["Will my SIP be cancelled if I miss one?", "How do I withdraw?"]);
   if (/(missed|miss)/.test(m)) return R("missed_instalment", "", lastPaid, "If an instalment is missed, only that month's units aren't bought; your units stay invested. A monthly SIP is cancelled only after 3 missed instalments in a row.", [], [], ["Can I pay a missed instalment?"]);
   if (/skip/.test(m) && !id) return R("change_sip", "", st.sips.map(x => `${x.fund}: ${rupees(x.amount)} on the ${nth(x.day)}`), `Yes. A skip applies to one instalment and the SIP stays active; a pause stops instalments for 1-3 months, then the SIP restarts. Units you hold stay invested either way. Which SIP, and skip or pause?`, [], [], ["Skip next month's Bluechip instalment", "Pause my Flexi Cap SIP for 1 month"]);
@@ -338,7 +339,28 @@ function diagnose(st, s) {
   return { f, reason: f.reason || (s.autopay !== "active" ? "autopay_expired" : "bank_error") };
 }
 function reminderDay(s) { return Math.max(1, (s.new_day || s.day) - 2); }
+// ---------- first year, from the account only (instalments paid, their dates, money in, value now); never a prediction ----------
+// Each instalment is invested on its own date, so a SIP's money has on average been in for far less time than the SIP has existed.
+const monthsText = a => (a < 1 ? "less than a month" : `about ${a % 1 ? a.toFixed(1) : a} month${a === 1 ? "" : "s"}`);
+const dateDays = d => { const [dd, mm, yy] = String(d).split(" "); return Date.UTC(+yy, MONTHS.indexOf(mm), +dd) / 86400000; };
+const halfMonths = days => Math.max(0, Math.round((days / 30.44) * 2) / 2);
+function firstYear(s, st) {
+  const held = s.instalments.filter(i => i.status === "paid");
+  const today = dateDays(st.today), n = held.length, gain = s.value - s.invested;
+  const rows = held.map(i => ({ date: i.date, amount: i.amount, months: halfMonths(today - dateDays(i.date)) }));
+  const tot = held.reduce((a, i) => a + i.amount, 0) || 1;
+  const avg = halfMonths(held.reduce((a, i) => a + i.amount * (today - dateDays(i.date)), 0) / tot);
+  const move = gain === 0 ? "level" : (gain > 0 ? "up " : "down ") + rupees(Math.abs(gain));
+  return { paid: n, invested: s.invested, value: s.value, gain, move, avg_months: avg, avg_text: monthsText(avg), held: rows,
+    line: `So far you've put in ${rupees(s.invested)} over ${n} instalment${n === 1 ? "" : "s"}, and it's worth ${rupees(s.value)} today (${move}). Each instalment is invested on its own date, so on average your money has been in for ${monthsText(avg)}. Small ups and downs this early are normal, and no one can promise when it grows.`,
+    short: `Your first year so far: ${rupees(s.invested)} in, worth ${rupees(s.value)} (${move}). On average your money has been in for ${monthsText(avg)}, so small moves are normal` };
+}
 function agentFlowRules(st, flow) {
+  const r = agentFlowRulesBase(st, flow);
+  if (flow.kind === "fix") { const s = sipById(st, flow.sip_id); if (s && diagnose(st, s) && !r.next.some(x => /first year so far/i.test(x))) r.next = r.next.concat([firstYear(s, st).short]); }
+  return r;
+}
+function agentFlowRulesBase(st, flow) {
   const s = sipById(st, flow.sip_id);
   const R = (topic, found, answer, next, actions, links, followups) => ({ topic, sip_id: s.id, found, answer, next: next || [], actions: actions || [], links: links || [], followups: followups || [], language: "en" });
   const pay = { type: "pay_now", sip_id: s.id };
@@ -360,7 +382,7 @@ function agentFlowRules(st, flow) {
   const found = [`${s.fund}: ${n} instalments, invested ${rupees(s.invested)}, value now ${rupees(s.value)}`];
   const tail = " If you still want to cancel, you can do it below; your invested money stays yours.";
   switch (flow.reason) {
-    case "growth": return R("growth", found, `It's normal to see little change early: you've invested ${n} instalments so far, so the value (${rupees(s.value)} on ${rupees(s.invested)}) moves only a little with the market. SIPs are meant for long holding periods and no one can promise when they grow. You could keep going, or pause for a month while you decide.` + tail, [], [{ type: "pause", sip_id: s.id, months: 1 }], [{ to: "sip", sip_id: s.id }], ["When will my money grow?"]);
+    case "growth": return R("growth", found, `It's normal to see little change early: you've invested ${n} instalments so far, and each one went in on its own date, so on average your money has been in for ${firstYear(s, st).avg_text}. That's why the value (${rupees(s.value)} on ${rupees(s.invested)}) moves only a little with the market. SIPs are meant for long holding periods and no one can promise when they grow. You could keep going, or pause for a month while you decide.` + tail, [], [{ type: "pause", sip_id: s.id, months: 1 }], [{ to: "sip", sip_id: s.id }], ["When will my money grow?"]);
     case "money_tight": return R("change_sip", found, `If money is tight, you don't have to cancel: you can skip the next instalment or pause for 1-3 months, and the SIP restarts by itself. Your ${rupees(s.value)} stays invested either way.` + tail, [], [{ type: "skip_next", sip_id: s.id }, { type: "pause", sip_id: s.id, months: 2 }], [{ to: "sip", sip_id: s.id }], []);
     case "payment_trouble": { const d = diagnose(st, s); const fx = d ? agentFlowRules(st, { kind: "fix", sip_id: s.id }) : null; const acts = fx ? fx.actions.filter(a => a.type !== "send_ticket") : []; return R("payment_failed", found.concat(d ? [`Last payment: ${d.f.bank_message || FAIL_REASONS[d.reason]}`] : []), "Payment trouble can usually be fixed without cancelling: " + (fx ? fx.answer.split(". ")[0] + "." : "you can set up AutoPay, pay manually, or pick a SIP date that suits you.") + tail, [], acts, fx ? fx.links : [{ to: "sip", sip_id: s.id }], []); }
     case "need_money": return R("withdraw", found.concat([s.exit_note]), `You can withdraw only what you need from this fund (up to ${rupees(s.value)}) without cancelling the SIP; for equity funds money usually reaches ${st.bank} within 2 working days.` + tail, [], [], [{ to: "withdraw", sip_id: s.id }], ["Will I pay tax if I withdraw?"]);
@@ -380,6 +402,8 @@ function mergeFlowRules(out, st, flow) {
     return out;
   }
   for (const a of r.actions) if (a.type !== "stop_sip" && !out.actions.some(x => x.type === a.type && x.sip_id === a.sip_id)) out.actions.unshift(a);
+  const fy = r.next.find(x => /first year so far/i.test(x));
+  if (fy && !(out.next || []).some(x => /first year so far/i.test(x))) out.next = (out.next || []).slice(0, 3).concat([fy]);
   for (const l of r.links) if (!out.links.some(x => x.to === l.to)) out.links.push(l);
   out.links = out.links.slice(0, 3);
   return out;
@@ -396,7 +420,7 @@ function agentAllowedNumbers(st, message) {
   const set = new Set(["0", "1", "2", "3", "4", "5", "6", "7", "12", "15", "20", "28", "100", "500", "1000", "2000", "125000", "1.25", "12.5", "2026", "2027", String(st.today_day), String(SIP_DAY), "24"]);
   const add = v => { if (v == null) return; String(v).replace(/,/g, "").match(/\d+(\.\d+)?/g)?.forEach(n => { set.add(n); set.add(n.split(".")[0]); }); };
   add(st.today); add(st.last_sip); add(st.next_sip);
-  for (const s of st.sips) { [s.amount, s.day, s.min_sip, s.invested, s.value, s.value - s.invested, Math.abs(s.value - s.invested), s.units, s.nav, s.new_day, s.new_amount, s.mandate_limit, reminderDay(s), s.exit_load, exitLoadOn(s, s.value), s.instalments.length, s.instalments.filter(i => i.status === "paid").length].forEach(add); s.instalments.forEach(i => add(i.date)); }
+  for (const s of st.sips) { [s.amount, s.day, s.min_sip, s.invested, s.value, s.value - s.invested, Math.abs(s.value - s.invested), s.units, s.nav, s.new_day, s.new_amount, s.mandate_limit, reminderDay(s), s.exit_load, exitLoadOn(s, s.value), s.instalments.length, s.instalments.filter(i => i.status === "paid").length, firstYear(s, st).avg_months].forEach(add); s.instalments.forEach(i => add(i.date)); }
   const tot = st.sips.reduce((a, s) => ({ i: a.i + s.invested, v: a.v + s.value }), { i: 0, v: 0 }); [tot.i, tot.v, tot.v - tot.i, Math.abs(tot.v - tot.i)].forEach(add);
   add(st.sips.reduce((a, s) => a + (s.new_amount || s.amount), 0)); add(st.sips.filter(s => s.status === "active").reduce((a, s) => a + s.amount, 0)); set.add("50"); // monthly total; "Nifty 50"
   st.redemptions.forEach(r => { add(r.amount); add(r.load); });
@@ -530,7 +554,7 @@ function agentView(st) {
     else if (s.autopay === "pending_approval") { label = "AutoPay waiting for approval"; tone = "info"; }
     return { id: s.id, fund: s.fund, plan: s.plan, category: s.category, amount: s.new_amount || s.amount, day: s.new_day || s.day, label, tone, skip_next: s.skip_next,
       last_invested: lastPaidOf(s) || "—", next: s.status === "active" ? (s.skip_next ? "Skipped · " + st.next_sip : st.next_sip_is_today ? "Today" : st.next_sip) : "—",
-      invested: s.invested, value: s.value, units: s.units, nav: s.nav, status: s.status, autopay: s.autopay, exit_note: s.exit_note, min_sip: s.min_sip, started: s.started, mandate_limit: s.mandate_limit || null, failed: !!f, fail_reason: f ? (f.bank_message || "") : "", instalments: s.instalments.slice(-8).reverse() };
+      invested: s.invested, value: s.value, units: s.units, nav: s.nav, status: s.status, autopay: s.autopay, exit_note: s.exit_note, min_sip: s.min_sip, started: s.started, mandate_limit: s.mandate_limit || null, failed: !!f, fail_reason: f ? (f.bank_message || "") : "", instalments: s.instalments.slice(-8).reverse(), year1: firstYear(s, st) };
   });
   const invested = st.sips.reduce((a, s) => a + s.invested, 0), value = st.sips.reduce((a, s) => a + s.value, 0);
   const obs = st.observations || [];

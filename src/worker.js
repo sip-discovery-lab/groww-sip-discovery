@@ -15,6 +15,7 @@ self.addEventListener("push", e => e.waitUntil((async () => {
 self.addEventListener("notificationclick", e => { e.notification.close(); const url = (e.notification.data && e.notification.data.url) || "/"; e.waitUntil((async () => { const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true }); for (const c of all) { if ("focus" in c) { c.navigate(url); return c.focus(); } } return self.clients.openWindow(url); })()); });`;
 const QUALITY_PAGE = /*@@QUALITY*/"";
 const PAGE = /*@@PAGE*/"";
+const DISCOVERY_PAGE = /*@@DISCOVERY*/"";
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, ts TEXT, chip TEXT, ai_situation TEXT, situation TEXT, confidence REAL, lang TEXT, actions TEXT, used_ai INTEGER, flags TEXT, redacted TEXT, latency_ms INTEGER, model TEXT, prompt_version TEXT, tester INTEGER, scenario TEXT, error TEXT)`,
@@ -647,6 +648,7 @@ async function route(req, env) {
   if (p === "/manifest.webmanifest") return new Response(JSON.stringify({ name: "Groww SIP Care (Concept)", short_name: "SIP Care", start_url: "/", display: "standalone", background_color: "#ffffff", theme_color: "#00b386", icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }] }), { headers: { "content-type": "application/manifest+json" } });
   if (p === "/icon.svg") return new Response(ICON_SVG, { headers: { "content-type": "image/svg+xml", "cache-control": "public, max-age=86400" } });
   if (p === "/helper" && req.method === "GET") return new Response(PAGE, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+  if ((p === "/discovery" || p === "/discovery/") && req.method === "GET") return new Response(DISCOVERY_PAGE, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
   if (p === "/quality" && req.method === "GET") return new Response(QUALITY_PAGE, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
   if (req.method === "OPTIONS" && p.startsWith("/api/")) return new Response(null, { status: 204, headers: CORS });
   if (!env.DB) return json({ ok: false, error: "No database bound (add a D1 binding named DB)" }, 500);
