@@ -21,3 +21,7 @@ jobs:
         run: node test/guard.mjs
       - name: Route and logic tests (mock AI)
         run: node test/run.mjs
+      - name: SIP Care diagnosis tests (mock AI)
+        run: node test/care.mjs
+      - name: SIP Care agent tests (mock AI)
+        run: node test/agent.mjs
