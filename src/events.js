@@ -56,7 +56,7 @@ function runSipDay(st, outcome) {
         title: debited ? `${rupees(s.amount)} debited, units not added` : `${rupees(s.amount)} SIP payment failed today`,
         what: debited ? `Your ${s.fund} instalment of ${rupees(s.amount)} was debited on ${date}, but the fund house didn't confirm the order, so no units were added.` : `Your ${s.fund} instalment of ${rupees(s.amount)} on ${date} didn't go through, so no units were bought for this month.`,
         why, impact: debited ? `Your money isn't lost: if the order isn't confirmed it's refunded to ${st.bank} in 5-7 business days. Your ${rupees(s.value)} already invested is safe.` : `Your ${rupees(s.value)} already invested is safe and your SIP is still active. One missed month doesn't cancel it; 3 in a row would.`,
-        notify: debited ? `${rupees(s.amount)} was debited for ${s.fund} but units weren't added. Your money is safe. Tap to see what SIP Care is doing.` : `Your ${s.fund} payment of ${rupees(s.amount)} failed today. Your invested money is safe. Tap to see why and what you can do.`, ask: "" });
+        notify: debited ? `${rupees(s.amount)} was debited for ${s.fund} but units weren't added. Your money is safe. See what SIP Care is doing.` : `Your ${s.fund} payment of ${rupees(s.amount)} failed today. Your invested money is safe. See why and what you can do.`, ask: "" });
       continue;
     }
     s.instalments.push({ date, status: "processing", amount: s.amount });
@@ -77,7 +77,7 @@ function injectSituation(st, kind) {
   if (kind === "units_pending") {
     const s = sipById(st, "A"); if ((s.order && s.order.status !== "allotted") || s.status !== "active") return out;
     s.order = { id: `OT-A${Date.now() % 100000}`, status: "delayed", debited: st.today, expected: "1-3 working days", ticks: 3, kind: "one_time", amount: s.amount };
-    out.push(makeObs(st, kind, s, { level: "alert", status: "open", title: "Money debited, units not showing yet", what: `${rupees(s.amount)} was debited from ${st.bank} for ${s.fund} today, but the units aren't in your portfolio yet.`, why: ["The order is still being processed by the fund house"], impact: "Your money is not lost. Units usually show 1-3 working days after the debit; if the order fails, the money comes back to your bank.", notify: `${rupees(s.amount)} was debited for ${s.fund}; units aren't showing yet. Tap and I'll check.`, ask: SITUATIONS_DEMO.units_pending.ask }));
+    out.push(makeObs(st, kind, s, { level: "alert", status: "open", title: "Money debited, units not showing yet", what: `${rupees(s.amount)} was debited from ${st.bank} for ${s.fund} today, but the units aren't in your portfolio yet.`, why: ["The order is still being processed by the fund house"], impact: "Your money is not lost. Units usually show 1-3 working days after the debit; if the order fails, the money comes back to your bank.", notify: `${rupees(s.amount)} was debited for ${s.fund}; units aren't showing yet. Open it and I'll check.`, ask: SITUATIONS_DEMO.units_pending.ask }));
   }
   return out;
 }
