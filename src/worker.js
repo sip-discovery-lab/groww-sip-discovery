@@ -263,12 +263,15 @@ async function runAgentAI(env, st, message, lang, history, db, flow) {
   let notes = "";
   if (db) { const gate = await gateStatus(db, env, AGENT_VERSION); const topic = flow ? (flow.kind === "fix" ? "payment_failed" : "stop_sip") : agentRules(red.text, st).topic; notes = await researchNotes(env, db, topic, { passed: gate.passed || env.RESEARCH === "always" }); }
   const user = agentUserPrompt(st, red.text, lang, history, notes, flow);
-  const ask = async (u, attempt) => { const raw = await callGemini(env, { st, message: red.text, lang, flow, attempt }, { system: agentSystemPrompt(), user: u, schema: AGENT_SCHEMA, mock: env.GEMINI_AGENT_MOCK, budgetMs: attempt === 1 ? 12000 : Math.max(2000, 20000 - (Date.now() - t0)) }); const o = intentFilter(mergeFlowRules(agentNormalise(raw, st), st, flow), red.text, flow); return { out: o, flags: agentGuard(o, st, red.text) }; };
+  const ask = async (u, attempt) => { const raw = await callGemini(env, { st, message: red.text, lang, flow, attempt }, { system: agentSystemPrompt(), user: u, schema: AGENT_SCHEMA, mock: env.GEMINI_AGENT_MOCK, budgetMs: attempt === 1 ? 12000 : Math.max(5000, 30000 - (Date.now() - t0)) }); const o = intentFilter(mergeFlowRules(agentNormalise(raw, st), st, flow), red.text, flow); return { out: o, flags: agentGuard(o, st, red.text) }; };
   let r = await ask(user, 1), repaired = false;
   // Self-correction: if the answer breaks a safety rule, the agent gets one chance to rewrite it before SIP Care falls back to its standard answer.
-  if (r.flags.length && Date.now() - t0 < 12000) {
-    const fix = `${user}\n\nYOUR PREVIOUS ANSWER WAS REJECTED by SIP Care's safety check: ${r.flags.join("; ")}.\nRewrite the whole answer so it breaks none of the RULES: copy every number and date exactly from the ACCOUNT, give no advice, no predictions, no urgency words, no sources.`;
-    try { const r2 = await ask(fix, 2); if (!r2.flags.length) { r = r2; repaired = true; } else r = r2; } catch (e) {}
+  // Also rewrite when the answer isn't in the language the user wrote in.
+  const langMiss = lang === "hinglish" ? (/[\u0900-\u097F]/.test(r.out.answer) || !/\b(hai|hain|aap|aapka|aapki|aapke|nahi|hoga|kar|ke|ka|ki|mein|me|se|ho|gaya|gayi|paisa|tha|thi|karein|diya|jab|kab)\b/i.test(r.out.answer)) : lang === "hi" ? !/[\u0900-\u097F]/.test(r.out.answer) : lang === "en" ? /[\u0900-\u097F]/.test(r.out.answer) : false;
+  if ((r.flags.length || langMiss) && Date.now() - t0 < 22000) {
+    const why = r.flags.length ? `SIP Care's safety check: ${r.flags.join("; ")}` : "";
+    const fix = `${user}\n\nYOUR PREVIOUS ANSWER WAS REJECTED${why ? " by " + why : ""}${langMiss ? `${why ? ", and" : ":"} it was not written in ${{ en: "English", hi: "Hindi (Devanagari)", hinglish: "Hinglish (Hindi in Roman letters)" }[lang] || "the user's language"}` : ""}.\nRewrite the whole answer so it breaks none of the RULES: write in the user's language, copy every number and date exactly from the ACCOUNT, give no advice, no predictions, no urgency words (including "jaldi" and "turant"), no sources.`;
+    try { const r2 = await ask(fix, 2); if (!r2.flags.length) { r = r2; repaired = true; } else if (r.flags.length) r = r2; } catch (e) {}
   }
   const plan = agentPlan(r.out, st);
   return { out: r.out, flags: r.flags, plan, repaired, redacted: red.found, latency: Date.now() - t0, researched: !!notes };
