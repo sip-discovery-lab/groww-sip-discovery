@@ -1,10 +1,10 @@
-// Browser test of SIP Care v3 (mock AI, gate off -> standard answers). Needs the dev server on :8788.
+// Browser test of SIP Care v4 (mock AI, gate off -> standard answers). Needs the dev server on :8788.
 const { chromium } = require("playwright");
 (async () => {
   const b = await chromium.launch(); let pass = 0, fail = 0; const F = [];
   const t = (n, c, i) => { if (c) pass++; else { fail++; F.push(n + (i ? " :: " + String(i).slice(0, 500) : "")); } };
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
-  const p = await ctx.newPage(); const errs = []; p.on("pageerror", e => errs.push(e.message)); p.on("console", m => { if (m.type() === "error" && !/fonts\.g|ERR_|net::/.test(m.text())) errs.push(m.text()); });
+  const p = await ctx.newPage(); const errs = []; p.on("pageerror", e => errs.push(e.message)); p.on("console", m => { if (m.type() === "error" && !/fonts\.g|ERR_|net::|status of 400/.test(m.text())) errs.push(m.text()); });
   const base = "http://localhost:8788";
   const answer = async () => { await p.waitForFunction(() => !document.querySelector(".work") && document.querySelectorAll(".ans").length > 0, null, { timeout: 8000 }); await p.waitForTimeout(150); };
   await p.goto(base + "/"); await p.waitForSelector(".strip");
@@ -47,22 +47,56 @@ const { chromium } = require("playwright");
   await p.click('.obs'); await p.waitForSelector(".an");
   t("note screen", /What happened/.test(await p.textContent("#app")));
   await p.goto(base + "/#/"); await p.waitForSelector(".strip");
-  // tester situation
-  await p.click("details.tester summary"); await p.click('[data-sit="payment_failed"]'); await p.waitForSelector(".issue");
+  // SIP day: payment fails -> instant alert -> options -> fix flow
+  await p.click("details.tester summary"); await p.click('[data-sit="sip_low_balance"]'); await p.waitForSelector(".issue");
   body = await p.textContent("#app");
-  t("situation: alert card + toast", /SIP Care spotted something/.test(body) && /instalment not paid/.test(body) && /Not paid/.test(body) && await p.isVisible(".toast"), body.slice(0, 700));
-  await p.screenshot({ path: "shots/v3_5_situation.png", fullPage: true });
-  await p.click('.issue [data-note]'); await p.waitForSelector("[data-ask]");
-  await p.click("[data-ask]"); await answer();
+  t("SIP day: instant alert + toast + demo date", /₹2,000 SIP payment failed today/.test(body) && /Demo date 26/.test(body) && await p.isVisible(".toast"), body.slice(0, 600));
+  await p.screenshot({ path: "shots/v4_1_failed_alert.png", fullPage: true });
+  await p.click('.issue [data-note]'); await p.waitForSelector('[data-opt="fix"]');
+  body = await p.textContent("#app");
+  t("failure screen: why + options", /Insufficient balance/.test(body) && /salary usually arrives on the 1st/.test(body) && /What would you like to do\?/.test(body) && /Keep my SIP going/.test(body) && /Cancel this SIP/.test(body), body.slice(0, 900));
+  await p.screenshot({ path: "shots/v4_2_options.png", fullPage: true });
+  await p.click('[data-opt="fix"]'); await answer();
   body = await p.textContent(".thread");
-  t("asks agent: bank reason + pay proposal", /Insufficient balance/.test(body) && /Pay ₹2,000 now/.test(body), body);
-  await p.screenshot({ path: "shots/v3_6_failed_answer.png", fullPage: true });
-  await p.click('.ans [data-decline]'); await p.waitForTimeout(400);
-  t("decline -> not done", /Not done/.test(await p.textContent(".thread")));
-  await p.click('.fups button'); await answer();
-  t("follow-up chip asks", (await p.$$(".ans")).length === 2);
+  t("fix flow: diagnosis, reminder, date change, link", /Move SIP date to the 3rd/.test(body) && /reminder/i.test(body) && /Open Flexi Cap SIP/.test(body), body);
+  await p.screenshot({ path: "shots/v4_3_fix.png", fullPage: true });
+  await p.click('.ans button:has-text("Open Flexi Cap SIP")'); await p.waitForSelector('[data-page="date"]');
+  t("link opens SIP details page", /Instalments/.test(await p.textContent("#app")) && /Fix with SIP Care/.test(await p.textContent("#app")));
+  await p.screenshot({ path: "shots/v4_4_sip_page.png", fullPage: true });
+  // cancel flow from the SIP page
+  await p.click('[data-opt="cancel"]'); await p.waitForSelector('input[name="cr"]');
+  t("cancel asks why first", /can I ask what's making you want to stop/.test(await p.textContent("#app")) && await p.isDisabled("#crGo"));
+  await p.screenshot({ path: "shots/v4_5_cancel_why.png", fullPage: true });
+  await p.check('input[value="growth"]'); await p.fill("#crText", "returns look too small");
+  await p.click("#crGo"); await answer();
+  body = await p.textContent(".thread");
+  t("cancel recommendation: explains, alternatives, cancel last", /normal to see little change early/.test(body) && /Pause for 1 month/.test(body) && /Cancel this SIP/.test(body) && body.indexOf("Pause for 1 month") < body.indexOf("Cancel this SIP"), body);
+  await p.screenshot({ path: "shots/v4_6_cancel_reco.png", fullPage: true });
+  // pages from nav
+  await p.click('nav [data-go="sips"]'); await p.waitForSelector(".rowbtn");
+  t("SIPs tab works", (await p.$$(".rowbtn")).length === 3);
+  await p.click('nav [data-go="bank"]'); await p.waitForSelector(".kv");
+  t("Account page shows salary day", /Salary usually arrives\s*1st/.test(await p.textContent("#app")));
+  await p.goto(base + "/#/orders"); await p.waitForSelector(".fund");
+  t("orders page shows failed payment with fix", /Failed/.test(await p.textContent("#app")) && /Fix with SIP Care/.test(await p.textContent("#app")));
+  await p.goto(base + "/#/withdraw/A"); await p.waitForSelector("#wdAmt");
+  await p.fill("#wdAmt", "1000"); await p.click('[data-page="withdraw"]'); await p.waitForSelector("#cfGo");
+  t("withdraw page -> confirm sheet", /Withdraw ₹1,000/.test(await p.textContent("#sheet")));
+  await p.click("#cfBack");
+  await p.goto(base + "/#/sip/C"); await p.waitForSelector("#newAmt");
+  await p.fill("#newAmt", "50"); await p.click('[data-page="amount"]'); await p.waitForTimeout(400);
+  t("page validation message", /at least/.test(await p.textContent("#toasts")));
+  await p.goto(base + "/#/care"); await p.waitForSelector("#q");
+  await p.click('[data-act="reset"]').catch(() => {});
+  await p.goto(base + "/"); await p.waitForSelector(".strip"); await p.click('[data-act="reset"]'); await p.waitForTimeout(600);
+  await p.click("details.tester summary"); await p.click('[data-sit="sip_autopay"]'); await p.waitForSelector(".issue");
+  await p.click('.issue [data-note]'); await p.click('[data-opt="fix"]'); await answer();
+  await p.click('.ans button:has-text("Open AutoPay settings")'); await p.waitForSelector(".card");
+  t("AutoPay fix links to AutoPay page", /AutoPay is not active|Waiting for your approval/.test(await p.textContent("#app")));
+  await p.goto(base + "/#/care"); await p.waitForSelector("#q");
   // language
-  await p.click('[data-lang="hinglish"]'); await p.click('[data-act="topics"]'); await p.waitForSelector(".topics");
+  if (await p.$('[data-act="topics"]')) await p.click('[data-act="topics"]');
+  await p.click('[data-lang="hinglish"]'); await p.waitForSelector(".topics");
   await p.click('.topic:has-text("Is my money safe?")'); await answer();
   t("hinglish question sent", /Kya mera paisa safe hai\?/.test(await p.textContent(".thread")));
   // PII

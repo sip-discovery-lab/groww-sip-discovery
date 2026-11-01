@@ -130,13 +130,15 @@ const SUITES = {
 };
 SUITES.agent = {
   version: AGENT_VERSION, cases: AGENT_CASES,
-  meta: c => ({ id: c.id, from: c.from, lang: c.lang, text: c.message + (c.situations && c.situations.length ? `  [account: ${c.situations.join(", ").replace(/_/g, " ")}]` : ""), sip: c.sip ? "SIP " + c.sip : "", expect: (c.topic || []).join(" / "), alt: [], main: (c.must || []).concat((c.forbid || []).map(x => "not " + x)).concat(c.no_actions ? ["no action"] : []) }),
+  meta: c => ({ id: c.id, from: c.from, lang: c.lang, text: (c.message || (c.flow ? (c.flow.kind === "fix" ? "[Keep my SIP going: fix the failed payment]" : `[Cancel SIP ${c.flow.sip_id}: ${CANCEL_REASONS[c.flow.reason]}]`) : "")) + (c.situations && c.situations.length ? `  [account: ${c.situations.join(", ").replace(/_/g, " ")}]` : ""), sip: c.sip ? "SIP " + c.sip : "", expect: (c.topic || []).join(" / "), alt: [], main: (c.must || []).concat((c.forbid || []).map(x => "not " + x)).concat(c.no_actions ? ["no action"] : []) }),
   run: async (env, c, db) => {
     const st = stateWith(c.situations || []);
+    if (c.state_patch) Object.assign(st, c.state_patch);
     if (c.patch) for (const [id, v] of Object.entries(c.patch)) Object.assign(sipById(st, id), v);
-    const r = await runAgentAI(env, st, c.message, c.lang, [], db);
+    const flow = c.flow || null;
+    const r = await runAgentAI(env, st, c.message || flowMessage(st, flow), c.lang, [], db, flow);
     const sc = agentScore(c, r.out, r.flags, r.plan);
-    const acts = r.plan.auto.map(a => a.type + "(auto)").concat(r.plan.proposals.map(p => p.type + "(confirm)"));
+    const acts = r.plan.auto.map(a => a.type + "(auto)").concat(r.plan.proposals.map(p => p.type + "(confirm)")).concat((r.out.links || []).map(l => "link:" + l.to));
     return { situation: r.out.topic + (r.out.sip_id ? " · " + r.out.sip_id : ""), actions: acts.join(", "), ok: sc.ok ? 1 : 0, reasons: sc.reasons.join(" | "), breaks: sc.breaks, summary: [r.out.answer, r.out.found.join(" / "), r.out.next.join(" / ")].join(" || ").slice(0, 500) };
   },
 };
@@ -242,13 +244,24 @@ async function researchNotes(env, db, topic, gate) {
   } catch (e) { return ""; }
 }
 
-async function runAgentAI(env, st, message, lang, history, db) {
+function flowMessage(st, flow) {
+  if (!flow) return "";
+  const s = sipById(st, flow.sip_id);
+  if (flow.kind === "fix") return `I want to keep my ${s ? s.fund : ""} SIP going. Find what went wrong with the payment and fix it.`;
+  return `I want to cancel my ${s ? s.fund : ""} SIP. Reason: ${CANCEL_REASONS[flow.reason] || "Something else"}${flow.text ? ". " + flow.text : ""}`;
+}
+function cleanFlow(f, st) {
+  if (!f || !FLOWS.includes(f.kind) || !sipById(st, f.sip_id)) return null;
+  return { kind: f.kind, sip_id: f.sip_id, reason: CANCEL_REASONS[f.reason] ? f.reason : "other", text: f.text ? redact(String(f.text).slice(0, 300)).text : "" };
+}
+function standardAnswer(text, st, flow) { return rulesLinks(intentFilter(agentNormalise(flow ? agentFlowRules(st, flow) : agentRules(text, st)), text, flow)); }
+async function runAgentAI(env, st, message, lang, history, db, flow) {
   const red = redact(message);
   const t0 = Date.now();
   let notes = "";
-  if (db) { const gate = await gateStatus(db, env, AGENT_VERSION); const topic = agentRules(red.text, st).topic; notes = await researchNotes(env, db, topic, { passed: gate.passed || env.RESEARCH === "always" }); }
-  const raw = await callGemini(env, { st, message: red.text, lang }, { system: agentSystemPrompt(), user: agentUserPrompt(st, red.text, lang, history, notes), schema: AGENT_SCHEMA, mock: env.GEMINI_AGENT_MOCK });
-  const out = intentFilter(agentNormalise(raw, st), red.text);
+  if (db) { const gate = await gateStatus(db, env, AGENT_VERSION); const topic = flow ? (flow.kind === "fix" ? "payment_failed" : "stop_sip") : agentRules(red.text, st).topic; notes = await researchNotes(env, db, topic, { passed: gate.passed || env.RESEARCH === "always" }); }
+  const raw = await callGemini(env, { st, message: red.text, lang, flow }, { system: agentSystemPrompt(), user: agentUserPrompt(st, red.text, lang, history, notes, flow), schema: AGENT_SCHEMA, mock: env.GEMINI_AGENT_MOCK });
+  const out = intentFilter(agentNormalise(raw, st), red.text, flow);
   const flags = agentGuard(out, st, red.text);
   const plan = agentPlan(out, st);
   return { out, flags, plan, redacted: red.found, latency: Date.now() - t0, researched: !!notes };
@@ -285,7 +298,7 @@ const hashStr = t => { let h = 5381; for (let i = 0; i < t.length; i++) h = ((h 
 
 function record(s, list) {
   const st = s.state;
-  for (const o of list) {
+  for (const o of list.slice().reverse()) {
     st.observations.unshift(o);
     st.inbox.unshift({ id: "n" + o.id, title: o.title, body: o.notify, obs_id: o.id, level: o.level, ask: o.ask || "", read: false, at: now() });
   }
@@ -295,7 +308,9 @@ function record(s, list) {
 // The always-on check: runs from the open app and from Cloudflare Cron.
 async function tickSession(env, db, s) {
   const st = s.state;
-  const fresh = monitorTick(st);
+  const t = istNow(env.NOW_MS ? Number(env.NOW_MS) : undefined);
+  // On the real SIP date, the agent runs the debits and reports at once.
+  const fresh = (t.d === SIP_DAY && dlabel(t.d, t.m, t.y) === st.next_sip ? runSipDay(st, "ok") : []).concat(monitorTick(st));
   record(s, fresh);
   for (const o of fresh) await careLog(db, s.id, "observe", { kind: o.kind });
   s.pending = s.pending.filter(p => !validateAction(p, st));
@@ -410,25 +425,26 @@ async function agentMessage(req, env, db) {
   const s = await loadSession(db, String(b.session_id || ""));
   if (!s) return cjson({ ok: false, error: "session not found; reload the app" }, 400);
   const lang = AGENT_LANGS.includes(b.lang) ? b.lang : (s.state.lang || "en");
-  const message = String(b.message || "").slice(0, 600).trim();
+  const flow = cleanFlow(b.flow, s.state);
+  const message = (String(b.message || "").slice(0, 600).trim()) || flowMessage(s.state, flow);
   if (!message) return cjson({ ok: false, error: "empty message" }, 400);
   const gate = await gateStatus(db, env, AGENT_VERSION);
   let out, flags = [], plan, used_ai = false, notice = "", err = "", latency = 0;
   const red = redact(message);
   if (gate.passed && s.msgs < AGENT_MSG_CAP && (await bump(db, "agent")) <= HELP_DAILY_CAP) {
     try {
-      const r = await runAgentAI(env, s.state, message, lang, s.history, db);
+      const r = await runAgentAI(env, s.state, message, lang, s.history, db, flow);
       out = r.out; flags = r.flags; plan = r.plan; latency = r.latency; used_ai = true;
       if (flags.length) {
         // Unsafe text: keep the user safe by switching this answer to the rule-based agent.
-        out = agentNormalise(agentRules(red.text, s.state), s.state);
+        out = standardAnswer(red.text, s.state, flow);
         plan = agentPlan(out, s.state); used_ai = false;
         notice = "Part of the AI answer broke a safety rule, so SIP Care used its standard answer.";
       }
     } catch (e) { err = String(e.message || e); notice = `AI is unavailable right now (${err}). SIP Care used its standard answer.`; }
   } else if (!gate.passed) notice = "AI is off until SIP Care passes its quality check. Using standard answers.";
   else notice = "Today's free AI limit is used up. Using standard answers.";
-  if (!out) { out = agentNormalise(agentRules(red.text, s.state), s.state); plan = agentPlan(out, s.state); }
+  if (!out) { out = standardAnswer(red.text, s.state, flow); plan = agentPlan(out, s.state); }
   if (red.found.length && !/share|PAN|OTP/i.test(out.answer)) out.answer = "Please don't share personal details like PAN, OTP or account numbers here; I've removed them. " + out.answer;
   const done = plan.auto.map(a => applyAction(a, s.state));
   const dupes = s.pending.filter(p => plan.proposals.some(q => q.type === p.type && q.sip_id === p.sip_id));
@@ -438,7 +454,24 @@ async function agentMessage(req, env, db) {
   s.msgs++;
   await saveSession(db, s);
   await careLog(db, s.id, "message", { topic: out.topic, used_ai: used_ai ? 1 : 0, flags: flags.join(" | "), error: err.slice(0, 200), latency, auto: plan.auto.map(a => a.type).join(","), proposed: plan.proposals.map(p => p.type).join(","), lang, redacted: red.found.join(",") });
-  return cjson({ ok: true, shown: red.text, used_ai, notice, topic: out.topic, intent: out.topic, sip_id: out.sip_id, found: out.found, answer: out.answer, reply: out.answer, next: out.next, followups: out.followups, done, proposals: plan.proposals, skipped: plan.skipped, redacted: red.found, pending: s.pending, view: agentView(s.state) });
+  return cjson({ ok: true, shown: red.text, used_ai, notice, topic: out.topic, intent: out.topic, sip_id: out.sip_id, found: out.found, answer: out.answer, reply: out.answer, next: out.next, followups: out.followups, links: out.links || [], flow, done, proposals: plan.proposals, skipped: plan.skipped, redacted: red.found, pending: s.pending, view: agentView(s.state) });
+}
+
+// Pages in the app (SIP details, AutoPay, withdraw, support) create a proposal directly; it still needs Confirm.
+async function agentPropose(req, env, db) {
+  const b = await readJson(req);
+  const s = await loadSession(db, String(b.session_id || ""));
+  if (!s) return cjson({ ok: false, error: "session not found; reload the app" }, 400);
+  if (!CONFIRM_ACTIONS.includes(b.type)) return cjson({ ok: false, error: "unknown action" }, 400);
+  const a = agentNormalise({ actions: [{ type: b.type, sip_id: b.sip_id, day: b.day, amount: b.amount, all: b.all, months: b.months, subject: b.subject, body: b.body ? redact(String(b.body)).text : undefined }] }).actions[0];
+  if (!a) return cjson({ ok: false, error: "unknown SIP" }, 400);
+  if (a.type === "redeem" && !a.all && !a.amount) a.all = true;
+  const why = validateAction(a, s.state);
+  if (why) return cjson({ ok: false, error: why.charAt(0).toUpperCase() + why.slice(1) + "." }, 400);
+  const p = Object.assign({ id: "p" + Math.random().toString(36).slice(2, 9) }, a, actionView(a, s.state));
+  s.pending = s.pending.filter(x => !(x.type === p.type && x.sip_id === p.sip_id)).concat([p]);
+  await saveSession(db, s);
+  return cjson({ ok: true, proposal: p, pending: s.pending, view: agentView(s.state) });
 }
 
 async function agentConfirm(req, env, db) {
@@ -455,6 +488,8 @@ async function agentConfirm(req, env, db) {
     steps.push(applyAction(p, s.state));
   }
   s.pending = s.pending.filter(p => !ids.includes(p.id));
+  for (const p of chosen) if (p.type !== "stop_sip") for (const o of s.state.observations) if (o.status === "open" && o.kind === "payment_failed" && o.sip_id === p.sip_id) o.status = failedInst(sipById(s.state, p.sip_id)) ? "in_progress" : "resolved";
+  for (const p of chosen) if (p.type === "stop_sip") for (const o of s.state.observations) if (o.status === "open" && o.sip_id === p.sip_id) o.status = "closed";
   const msg = homeMessage(steps.slice(1));
   s.history.push({ role: "agent", text: msg });
   await saveSession(db, s);
@@ -618,6 +653,7 @@ async function route(req, env) {
     if (p === "/api/agent/push-key") return await agentPushKey(req, env, db);
     if (p === "/api/agent/push-subscribe" && req.method === "POST") return await agentPushSubscribe(req, env, db);
     if (p === "/api/agent/latest") return await agentLatest(req, env, db, url);
+    if (p === "/api/agent/propose" && req.method === "POST") return await agentPropose(req, env, db);
     if (p === "/api/agent/situation" && req.method === "POST") return await agentSituation(req, env, db);
     if (p === "/api/agent/message" && req.method === "POST") return await agentMessage(req, env, db);
     if (p === "/api/agent/confirm" && req.method === "POST") return await agentConfirm(req, env, db);

@@ -2,8 +2,9 @@
 import fs from "node:fs";
 const cases = JSON.parse(fs.readFileSync(new URL("../eval/agent_cases.json", import.meta.url), "utf8"));
 const R = { en: "I've checked your SIPs. Your invested money is safe.", hinglish: "Maine aapki SIP check ki hai. Aapka invested paisa safe hai.", hi: "मैंने आपकी SIP देखी है। आपका निवेश किया हुआ पैसा सुरक्षित है।" };
-export function makeAgentMock(rules, mode) {
-  return async ({ st, message, lang }) => {
+export function makeAgentMock(rules, mode, flowRules) {
+  return async ({ st, message, lang, flow }) => {
+    if (flow && flowRules && mode.m !== "down" && mode.m !== "bad") { const r = flowRules(st, flow); return Object.assign(r, { answer: lang === "en" ? r.answer : R[lang], language: lang }); }
     if (mode.m === "down") throw new Error("HTTP 429 · Resource exhausted (free-tier limit reached: try again later)");
     if (mode.m === "bad") return { topic: "payment_failed", sip_id: "A", found: ["As per SEBI rules on www.example.com"], answer: "Bounce fee waived! Pay ₹999 immediately or you will lose everything.", actions: [{ type: "stop_sip", sip_id: "A" }] };
     if (mode.m === "leak") return { topic: "withdraw", sip_id: "", found: ["Value ₹6,192"], answer: "According to Zerodha's website, money is credited within 2 working days.", actions: [] };

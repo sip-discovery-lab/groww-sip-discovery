@@ -52,23 +52,31 @@ Open the app at `/`. It is a Groww-style concept app with a demo user (Riya) and
 4. **Acts:** safe steps run by themselves (track an order, set a reminder, draft a support message). Anything that moves money or changes a SIP (withdraw, pay a missed instalment, stop, change date or amount, skip, pause, restart, new AutoPay request, send a ticket) is **proposed and waits for Confirm**, with the details (amount, exit load, bank, timeline) on the confirm sheet.
 5. **Follows up in the background:** the agent keeps checking (in the open app and via Cloudflare Cron with the app closed) and notifies the user when units are added, a withdrawal is credited, a stop is processed or AutoPay is active again (in-app, inbox, and Web Push). Demo time is accelerated: things that take 1-2 working days finish in about a minute.
 
-**For testers:** a "try a situation" panel switches on a payment failure, money debited but units not showing, or AutoPay expiring, so the agent's notice → question → fix flow can be tested on demand.
+**On the SIP date (failed payment flow):**
+1. **Instant alert.** SIP Care watches every debit on the SIP date. If one fails, it notifies the user at once (in-app, inbox and Web Push) with what happened, why (bank reason, balance at the time of the debit, salary day, AutoPay status) and what it means (invested money safe, SIP still active).
+2. **Options first.** SIP Care recommends checking the options before deciding: keep my SIP going (recommended), take a break (pause 1-3 months), cancel this SIP, or ask something else.
+3. **Keep going → AI fix.** SIP Care detects the cause and proposes the best fix: low balance → reminder on salary day + move the SIP date after payday (pay the missed instalment once salary arrives; it alerts when salary lands); AutoPay expired → set up AutoPay again + pay now; bank error → retry payment + support ticket. Stop and withdraw are never proposed here.
+4. **Cancel → AI asks why first.** Reasons (not seeing growth, money tight, payment trouble, need the money, don't understand SIPs, other + own words), then a recommendation that fits the reason (e.g. early SIP values move little, explained with the user's own numbers; skip or pause; withdraw only what's needed). "Cancel this SIP" is always offered, last, and a "skip and cancel now" button is always there.
+5. **Redirects.** Answers carry buttons to the right page: SIP details (date, amount, skip, pause, AutoPay, withdraw, cancel), AutoPay settings, payments & orders, support ticket (pre-drafted), bank account, withdraw. Every change made from a page still needs Confirm.
+
+On the real SIP date the agent runs the debits itself (all succeed in the demo account). **For testers:** "try a situation" jumps to the next SIP date with a chosen outcome (low balance, AutoPay expired, bank error, all paid) or shows money debited without units.
 
 **Safety rules (checked on every AI answer):** no fund recommendations or comparisons, no return predictions, only numbers from the account, the guidelines or the user's message, no fee waivers, no fear or urgency words, no requests for personal data (PAN, account numbers, OTP are stripped before the AI sees them), no mention of sources. If any rule breaks, or AI is off, down or over the free limit, SIP Care uses its rule-based answer and labels it "Standard".
 
 | Route | What it does |
 |---|---|
 | `POST /api/agent/start` | Start or resume a demo session (`reset: true` for a fresh account) |
-| `POST /api/agent/message` | Ask SIP Care any SIP question; returns found / answer / next / follow-ups, auto steps and proposals |
+| `POST /api/agent/message` | Ask SIP Care any SIP question, or a guided step (`flow`: fix a failed payment, or cancel with a reason); returns found / answer / next / follow-ups / links, auto steps and proposals |
 | `POST /api/agent/confirm` / `decline` | User confirms or declines proposals |
 | `POST /api/agent/tick` | Background check (auto-paced) |
-| `POST /api/agent/situation` | Testers: switch on a demo situation |
+| `POST /api/agent/situation` | Testers: run the SIP date with a chosen outcome, or another demo situation |
+| `POST /api/agent/propose` | App pages create an action that still needs Confirm |
 | `POST /api/agent/settings` | Pause/resume background checks, language, mark notifications read |
 | `GET /api/agent/push-key`, `POST /api/agent/push-subscribe`, `GET /api/agent/latest` | Web Push alerts (VAPID keys generated and kept in D1; pushes carry no data) |
 | `POST /api/agent/feedback`, `GET /api/agent/stats` | Tester answers and usage stats |
-| `GET /quality` | Run the 30-question agent quality gate (`agent-v3`) |
+| `GET /quality` | Run the 42-case agent quality gate (`agent-v4`: 30 questions + 12 guided fix/cancel cases) |
 
-AI answers are used only after the agent passes its gate: at least 90% of 30 cases and zero rule breaks, per model and version.
+AI answers are used only after the agent passes its gate: at least 90% of 42 cases and zero rule breaks, per model and version.
 
 ## Earlier SIP Care diagnosis API
 

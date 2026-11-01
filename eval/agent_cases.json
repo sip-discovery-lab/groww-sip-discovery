@@ -8,7 +8,7 @@
    "payment_failed"
   ],
   "situations": [
-   "payment_failed"
+   "sip_bank_error"
   ],
   "sip": "B",
   "must": [
@@ -30,7 +30,7 @@
    "payment_failed"
   ],
   "situations": [
-   "payment_failed"
+   "sip_bank_error"
   ],
   "sip": "B",
   "forbid": [
@@ -366,7 +366,7 @@
    "autopay"
   ],
   "situations": [
-   "autopay_expired"
+   "sip_autopay"
   ],
   "sip": "C",
   "must": [
@@ -421,7 +421,7 @@
    "status"
   ],
   "situations": [
-   "payment_failed"
+   "sip_bank_error"
   ],
   "forbid": [
    "stop_sip",
@@ -468,5 +468,360 @@
   "no_actions": true,
   "need_found": true,
   "type": "chat"
+ },
+ {
+  "id": "F01",
+  "from": "SIP day: low balance → keep going",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_low_balance"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "payment_failed",
+   "autopay"
+  ],
+  "sip": "B",
+  "must": [
+   "change_date"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem",
+   "pay_now"
+  ],
+  "need_found": true,
+  "must_links": [
+   "sip|bank"
+  ]
+ },
+ {
+  "id": "F02",
+  "from": "SIP day: low balance → keep going",
+  "lang": "hinglish",
+  "type": "flow",
+  "situations": [
+   "sip_low_balance"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "payment_failed",
+   "autopay"
+  ],
+  "sip": "B",
+  "must": [
+   "change_date"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem",
+   "pay_now"
+  ]
+ },
+ {
+  "id": "F03",
+  "from": "Salary arrived → keep going",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_low_balance"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "payment_failed",
+   "autopay"
+  ],
+  "sip": "B",
+  "state_patch": {
+   "balance": 46240
+  },
+  "must": [
+   "pay_now"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "need_found": true
+ },
+ {
+  "id": "F04",
+  "from": "SIP day: AutoPay expired → keep going",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_autopay"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "payment_failed",
+   "autopay"
+  ],
+  "sip": "B",
+  "must": [
+   "setup_autopay",
+   "pay_now"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ],
+  "must_links": [
+   "autopay"
+  ]
+ },
+ {
+  "id": "F05",
+  "from": "SIP day: AutoPay expired → keep going",
+  "lang": "hi",
+  "type": "flow",
+  "situations": [
+   "sip_autopay"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "payment_failed",
+   "autopay"
+  ],
+  "sip": "B",
+  "must": [
+   "setup_autopay"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem"
+  ]
+ },
+ {
+  "id": "F06",
+  "from": "SIP day: bank error → keep going",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_bank_error"
+  ],
+  "flow": {
+   "kind": "fix",
+   "sip_id": "B"
+  },
+  "topic": [
+   "payment_failed",
+   "autopay"
+  ],
+  "sip": "B",
+  "must": [
+   "pay_now"
+  ],
+  "forbid": [
+   "stop_sip",
+   "redeem",
+   "change_date"
+  ],
+  "must_links": [
+   "support|orders"
+  ]
+ },
+ {
+  "id": "F07",
+  "from": "Cancel: not seeing growth",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_low_balance"
+  ],
+  "flow": {
+   "kind": "cancel_reason",
+   "sip_id": "B",
+   "reason": "growth"
+  },
+  "topic": [
+   "stop_sip",
+   "growth",
+   "change_sip",
+   "withdraw",
+   "how_to",
+   "payment_failed",
+   "autopay",
+   "is_money_safe"
+  ],
+  "sip": "B",
+  "must": [
+   "stop_sip"
+  ],
+  "forbid": [
+   "redeem"
+  ],
+  "stop_last": true,
+  "need_found": true
+ },
+ {
+  "id": "F08",
+  "from": "Cancel: money tight",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_low_balance"
+  ],
+  "flow": {
+   "kind": "cancel_reason",
+   "sip_id": "B",
+   "reason": "money_tight"
+  },
+  "topic": [
+   "stop_sip",
+   "growth",
+   "change_sip",
+   "withdraw",
+   "how_to",
+   "payment_failed",
+   "autopay",
+   "is_money_safe"
+  ],
+  "sip": "B",
+  "must": [
+   "stop_sip"
+  ],
+  "must_any": [
+   "skip_next",
+   "pause"
+  ],
+  "stop_last": true
+ },
+ {
+  "id": "F09",
+  "from": "Cancel: payment trouble",
+  "lang": "en",
+  "type": "flow",
+  "situations": [
+   "sip_autopay"
+  ],
+  "flow": {
+   "kind": "cancel_reason",
+   "sip_id": "B",
+   "reason": "payment_trouble"
+  },
+  "topic": [
+   "stop_sip",
+   "growth",
+   "change_sip",
+   "withdraw",
+   "how_to",
+   "payment_failed",
+   "autopay",
+   "is_money_safe"
+  ],
+  "sip": "B",
+  "must": [
+   "setup_autopay",
+   "stop_sip"
+  ],
+  "stop_last": true
+ },
+ {
+  "id": "F10",
+  "from": "Cancel: need money",
+  "lang": "en",
+  "type": "flow",
+  "situations": [],
+  "flow": {
+   "kind": "cancel_reason",
+   "sip_id": "A",
+   "reason": "need_money"
+  },
+  "topic": [
+   "stop_sip",
+   "growth",
+   "change_sip",
+   "withdraw",
+   "how_to",
+   "payment_failed",
+   "autopay",
+   "is_money_safe"
+  ],
+  "sip": "A",
+  "must": [
+   "stop_sip"
+  ],
+  "stop_last": true,
+  "must_links": [
+   "withdraw"
+  ]
+ },
+ {
+  "id": "F11",
+  "from": "Cancel: doesn't understand SIPs",
+  "lang": "hinglish",
+  "type": "flow",
+  "situations": [],
+  "flow": {
+   "kind": "cancel_reason",
+   "sip_id": "C",
+   "reason": "dont_understand"
+  },
+  "topic": [
+   "stop_sip",
+   "growth",
+   "change_sip",
+   "withdraw",
+   "how_to",
+   "payment_failed",
+   "autopay",
+   "is_money_safe"
+  ],
+  "sip": "C",
+  "must": [
+   "stop_sip"
+  ],
+  "forbid": [
+   "redeem"
+  ],
+  "stop_last": true
+ },
+ {
+  "id": "F12",
+  "from": "Cancel: own words, comparing returns",
+  "lang": "en",
+  "type": "flow",
+  "situations": [],
+  "flow": {
+   "kind": "cancel_reason",
+   "sip_id": "B",
+   "reason": "other",
+   "text": "Returns are too low, my FD gives more. Should I just put it in FD?"
+  },
+  "topic": [
+   "stop_sip",
+   "growth",
+   "change_sip",
+   "withdraw",
+   "how_to",
+   "payment_failed",
+   "autopay",
+   "is_money_safe"
+  ],
+  "sip": "B",
+  "must": [
+   "stop_sip"
+  ],
+  "forbid": [
+   "redeem"
+  ],
+  "stop_last": true
  }
 ]
