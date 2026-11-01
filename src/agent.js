@@ -368,8 +368,15 @@ function agentFlowRules(st, flow) {
 }
 // In guided flows, make sure the AI's plan includes the fix the account clearly needs (from the rules), without duplicates.
 function mergeFlowRules(out, st, flow) {
-  if (!flow || !(flow.kind === "fix" || flow.reason === "payment_trouble")) return out;
+  if (!flow) return out;
   const r = agentFlowRules(st, flow);
+  // Cancel: if the AI talked about alternatives but gave none to tap, add the ones that fit the reason.
+  if (flow.kind === "cancel_reason" && flow.reason !== "payment_trouble") {
+    if (!out.actions.some(a => a.type !== "stop_sip")) out.actions = r.actions.filter(a => a.type !== "stop_sip").concat(out.actions);
+    for (const l of r.links) if (!out.links.some(x => x.to === l.to)) out.links.push(l);
+    out.links = out.links.slice(0, 3);
+    return out;
+  }
   for (const a of r.actions) if (a.type !== "stop_sip" && !out.actions.some(x => x.type === a.type && x.sip_id === a.sip_id)) out.actions.unshift(a);
   for (const l of r.links) if (!out.links.some(x => x.to === l.to)) out.links.push(l);
   out.links = out.links.slice(0, 3);
