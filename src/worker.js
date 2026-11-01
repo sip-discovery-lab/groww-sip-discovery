@@ -139,7 +139,7 @@ SUITES.agent = {
     const r = await runAgentAI(env, st, c.message || flowMessage(st, flow), c.lang, [], db, flow);
     const sc = agentScore(c, r.out, r.flags, r.plan);
     const acts = r.plan.auto.map(a => a.type + "(auto)").concat(r.plan.proposals.map(p => p.type + "(confirm)")).concat((r.out.links || []).map(l => "link:" + l.to));
-    return { situation: r.out.topic + (r.out.sip_id ? " · " + r.out.sip_id : ""), actions: acts.join(", "), ok: sc.ok ? 1 : 0, reasons: sc.reasons.join(" | "), breaks: sc.breaks, summary: [r.out.answer, r.out.found.join(" / "), r.out.next.join(" / ")].join(" || ").slice(0, 500) };
+    return { situation: r.out.topic + (r.out.sip_id ? " · " + r.out.sip_id : ""), actions: acts.join(", "), ok: sc.ok ? 1 : 0, reasons: sc.reasons.join(" | "), breaks: sc.breaks, summary: (r.repaired ? "[self-corrected after a rule check] " : "") + [r.out.answer, r.out.found.join(" / "), r.out.next.join(" / ")].join(" || ").slice(0, 500) };
   },
 };
 const suiteOf = v => SUITES[v] ? v : "helper";
@@ -260,11 +260,16 @@ async function runAgentAI(env, st, message, lang, history, db, flow) {
   const t0 = Date.now();
   let notes = "";
   if (db) { const gate = await gateStatus(db, env, AGENT_VERSION); const topic = flow ? (flow.kind === "fix" ? "payment_failed" : "stop_sip") : agentRules(red.text, st).topic; notes = await researchNotes(env, db, topic, { passed: gate.passed || env.RESEARCH === "always" }); }
-  const raw = await callGemini(env, { st, message: red.text, lang, flow }, { system: agentSystemPrompt(), user: agentUserPrompt(st, red.text, lang, history, notes, flow), schema: AGENT_SCHEMA, mock: env.GEMINI_AGENT_MOCK });
-  const out = intentFilter(mergeFlowRules(agentNormalise(raw, st), st, flow), red.text, flow);
-  const flags = agentGuard(out, st, red.text);
-  const plan = agentPlan(out, st);
-  return { out, flags, plan, redacted: red.found, latency: Date.now() - t0, researched: !!notes };
+  const user = agentUserPrompt(st, red.text, lang, history, notes, flow);
+  const ask = async (u, attempt) => { const raw = await callGemini(env, { st, message: red.text, lang, flow, attempt }, { system: agentSystemPrompt(), user: u, schema: AGENT_SCHEMA, mock: env.GEMINI_AGENT_MOCK }); const o = intentFilter(mergeFlowRules(agentNormalise(raw, st), st, flow), red.text, flow); return { out: o, flags: agentGuard(o, st, red.text) }; };
+  let r = await ask(user, 1), repaired = false;
+  // Self-correction: if the answer breaks a safety rule, the agent gets one chance to rewrite it before SIP Care falls back to its standard answer.
+  if (r.flags.length) {
+    const fix = `${user}\n\nYOUR PREVIOUS ANSWER WAS REJECTED by SIP Care's safety check: ${r.flags.join("; ")}.\nRewrite the whole answer so it breaks none of the RULES: copy every number and date exactly from the ACCOUNT, give no advice, no predictions, no urgency words, no sources.`;
+    try { const r2 = await ask(fix, 2); if (!r2.flags.length) { r = r2; repaired = true; } else r = r2; } catch (e) {}
+  }
+  const plan = agentPlan(r.out, st);
+  return { out: r.out, flags: r.flags, plan, repaired, redacted: red.found, latency: Date.now() - t0, researched: !!notes };
 }
 
 async function loadSession(db, id) {
