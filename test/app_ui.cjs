@@ -3,7 +3,7 @@ const { chromium } = require("playwright");
 (async () => {
   const b = await chromium.launch(); let pass = 0, fail = 0; const F = [];
   const t = (n, c, i) => { if (c) pass++; else { fail++; F.push(n + (i ? " :: " + String(i).slice(0, 500) : "")); } };
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 860 } });
   const p = await ctx.newPage(); const errs = []; p.on("pageerror", e => errs.push(e.message)); p.on("console", m => { if (m.type() === "error" && !/fonts\.g|ERR_|net::|status of 400/.test(m.text())) errs.push(m.text()); });
   const base = "http://localhost:8788";
   const answer = async () => { await p.waitForFunction(() => !document.querySelector(".work") && document.querySelectorAll(".ans").length > 0, null, { timeout: 8000 }); await p.waitForTimeout(150); };
@@ -19,14 +19,14 @@ const { chromium } = require("playwright");
   await p.goto(base + "/?demo=normal"); await p.waitForSelector(".strip");
   body = await p.textContent("#app");
   t("launch: all on track, no errors", /All SIPs on track/.test(body) && !(await p.$(".issue")) && !(await p.$(".nbadge")) && !(await p.isVisible(".toast")), body.slice(0, 400));
-  t("last invested 26th", /Last invested\s*26 (Sep|Oct)/.test(body) && /Last SIP date\s*26/.test(body), body.slice(0, 900));
+  t("last invested 26th", /Last invested/.test(body) && /26 (Sep|Oct|Nov) 2026/.test(body) && /Last SIP date\s*26/.test(body), body.slice(0, 900));
   t("portfolio value shown", /₹15,112/.test(body) && /Invested\s*₹15,000/.test(body));
   t("no demo-day controls", !/Next day|Demo date/.test(body));
   t("topics on home", (await p.$$(".topic")).length === 4);
   await p.screenshot({ path: "shots/v3_1_home.png", fullPage: true });
   await p.click('[data-act="toggle"]'); await p.waitForTimeout(250);
   // SIP Care: user decides
-  await p.click('.qa [data-go="care"]'); await p.waitForSelector(".topics");
+  await p.click('.topnav [data-go="care"]'); await p.waitForSelector(".topics");
   body = await p.textContent("#app");
   t("care opens with picker", /What would you like to check\?/.test(body) && (await p.$$(".topic")).length === 10);
   await p.screenshot({ path: "shots/v3_2_care_picker.png", fullPage: true });
@@ -85,9 +85,9 @@ const { chromium } = require("playwright");
   t("cancel recommendation on the cancel screen: alternatives, cancel last", /normal to see little change early/.test(body) && /Pause for 1 month/.test(body) && /Cancel anyway/.test(body) && body.indexOf("Pause for 1 month") < body.indexOf("Cancel anyway") && !(await p.$(".thread")), body);
   await p.screenshot({ path: "shots/v5_5_cancel.png", fullPage: true });
   // pages from nav
-  await p.click('nav [data-go="sips"]'); await p.waitForSelector(".rowbtn");
-  t("SIPs tab works", (await p.$$(".rowbtn")).length === 3);
-  await p.click('nav [data-go="bank"]'); await p.waitForSelector(".kv");
+  await p.click('.topnav [data-go="sips"]'); await p.waitForSelector(".siptable");
+  t("SIPs tab works", (await p.$$(".siptable tbody tr")).length === 3);
+  await p.click('.topnav [data-go="bank"]'); await p.waitForSelector(".kv");
   t("Account page: no balance or salary", /Linked bank account/.test(await p.textContent("#app")) && !/Balance \(demo\)|Salary usually/.test(await p.textContent("#app")));
   await p.goto(base + "/#/orders"); await p.waitForSelector(".fund");
   t("orders page lists payments incl. the paid-again instalment", /Payments & orders/.test(await p.textContent("#app")) && /Units on the way|Paid/.test(await p.textContent("#app")));
@@ -109,7 +109,7 @@ const { chromium } = require("playwright");
     t(`${k}: link opens the right section`, page.test(await p.textContent("#app")), (await p.textContent("#app")).slice(0, 400));
     await p.screenshot({ path: `shots/v5_${k}.png`, fullPage: true });
   }
-  await p.goto(base + "/?demo=normal"); await p.waitForSelector(".strip"); await p.click('.qa [data-go="care"]'); await p.waitForSelector("#q");
+  await p.goto(base + "/?demo=normal"); await p.waitForSelector(".strip"); await p.click('.topnav [data-go="care"]'); await p.waitForSelector("#q");
   // language
   if (await p.$('[data-act="topics"]')) await p.click('[data-act="topics"]');
   await p.click('[data-lang="hinglish"]'); await p.waitForSelector(".topics");
