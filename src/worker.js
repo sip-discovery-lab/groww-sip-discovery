@@ -261,7 +261,7 @@ async function runAgentAI(env, st, message, lang, history, db, flow) {
   let notes = "";
   if (db) { const gate = await gateStatus(db, env, AGENT_VERSION); const topic = flow ? (flow.kind === "fix" ? "payment_failed" : "stop_sip") : agentRules(red.text, st).topic; notes = await researchNotes(env, db, topic, { passed: gate.passed || env.RESEARCH === "always" }); }
   const raw = await callGemini(env, { st, message: red.text, lang, flow }, { system: agentSystemPrompt(), user: agentUserPrompt(st, red.text, lang, history, notes, flow), schema: AGENT_SCHEMA, mock: env.GEMINI_AGENT_MOCK });
-  const out = intentFilter(agentNormalise(raw, st), red.text, flow);
+  const out = intentFilter(mergeFlowRules(agentNormalise(raw, st), st, flow), red.text, flow);
   const flags = agentGuard(out, st, red.text);
   const plan = agentPlan(out, st);
   return { out, flags, plan, redacted: red.found, latency: Date.now() - t0, researched: !!notes };

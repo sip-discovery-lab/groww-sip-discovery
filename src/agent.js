@@ -366,6 +366,15 @@ function agentFlowRules(st, flow) {
     default: return R("stop_sip", found, `Thanks for telling me. Before you cancel: you can also skip the next instalment or pause for a while, and your ${rupees(s.value)} stays invested either way.` + tail, [], [{ type: "skip_next", sip_id: s.id }], [{ to: "sip", sip_id: s.id }], []);
   }
 }
+// In guided flows, make sure the AI's plan includes the fix the account clearly needs (from the rules), without duplicates.
+function mergeFlowRules(out, st, flow) {
+  if (!flow || !(flow.kind === "fix" || flow.reason === "payment_trouble")) return out;
+  const r = agentFlowRules(st, flow);
+  for (const a of r.actions) if (a.type !== "stop_sip" && !out.actions.some(x => x.type === a.type && x.sip_id === a.sip_id)) out.actions.unshift(a);
+  for (const l of r.links) if (!out.links.some(x => x.to === l.to)) out.links.push(l);
+  out.links = out.links.slice(0, 3);
+  return out;
+}
 // Pages the standard answers link to.
 function rulesLinks(out) {
   const L = { payment_failed: [{ to: "orders" }], not_reflecting: [{ to: "orders" }], autopay: [{ to: "autopay", sip_id: out.sip_id }], withdraw: out.sip_id ? [{ to: "withdraw", sip_id: out.sip_id }] : [{ to: "portfolio" }], stop_sip: out.sip_id ? [{ to: "sip", sip_id: out.sip_id }] : [], change_sip: out.sip_id ? [{ to: "sip", sip_id: out.sip_id }] : [], growth: [{ to: "portfolio" }] }[out.topic] || [];
@@ -397,7 +406,7 @@ function agentNumberFlags(text, allowed) {
   return [...new Set(flags)];
 }
 // Never reveal where guidelines came from.
-const SOURCE_LEAK = /(https?:\/\/|www\.|\.(com|in|org|net|co)\b|according to|as per (sebi|amfi|rules? by|reports?|the)|\bsebi\b|\bamfi\b|\bsources?\b|\bsourced\b|\bresearch(ed)?\b|\barticles?\b|\bwebsites?\b|\bgoogle\b|\bblogs?\b|zerodha|kuvera|upstox|angel ?one|paytm|indmoney|et money|cleartax|moneycontrol|value research|morningstar|\bcams\b|kfintech)/i;
+const SOURCE_LEAK = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|org|net|co\.in|gov\.in)\b|according to (sebi|amfi|the (rules|regulator|guidelines|article|report|data)|reports?|data from|research|experts?)|as per (sebi|amfi|rules? by|reports?|the (regulator|article|report))|\bsebi\b|\bamfi\b|\bsources?\b|\bsourced\b|\bresearch(ed)?\b|\barticles?\b|\bwebsites?\b|\bgoogle\b|\bblogs?\b|zerodha|kuvera|upstox|angel ?one|paytm|indmoney|et money|cleartax|moneycontrol|value research|morningstar|\bcams\b|kfintech)/i;
 function stripOwnFunds(text, st) {
   let t = String(text || "");
   for (const s of st.sips) {
@@ -419,6 +428,9 @@ function agentNormalise(raw) {
   if (!["A", "B", "C"].includes(out.sip_id)) out.sip_id = "";
   out.answer = String(out.answer || out.reply || "").slice(0, 700);
   for (const f of ["found", "next", "followups"]) out[f] = (Array.isArray(out[f]) ? out[f] : []).map(x => String(x).slice(0, 200)).filter(Boolean).slice(0, 4);
+  // "Pay it immediately" is timing, not pressure, but keep every answer calm: say "now" instead.
+  const calm = t => String(t).replace(/\b(immediately|right away|instantly)\b/gi, "now").replace(/\bturant\b/gi, "abhi").replace(/तुरंत/g, "अभी");
+  out.answer = calm(out.answer); for (const f of ["found", "next", "followups"]) out[f] = out[f].map(calm);
   out.actions = (Array.isArray(out.actions) ? out.actions : []).filter(a => a && ALL_ACTIONS.includes(a.type) && ["A", "B", "C"].includes(a.sip_id)).slice(0, 4)
     .map(a => ({ type: a.type, sip_id: a.sip_id, day: a.day != null ? parseInt(a.day, 10) : undefined, amount: a.amount != null ? parseInt(a.amount, 10) : undefined, all: a.all === true || undefined, months: a.months != null ? parseInt(a.months, 10) : undefined, subject: a.subject ? String(a.subject).slice(0, 120) : undefined, body: a.body ? String(a.body).slice(0, 600) : undefined }));
   out.links = (Array.isArray(out.links) ? out.links : []).filter(l => l && LINK_TARGETS.includes(l.to)).map(l => ({ to: l.to, sip_id: ["A", "B", "C"].includes(l.sip_id) ? l.sip_id : "" }))

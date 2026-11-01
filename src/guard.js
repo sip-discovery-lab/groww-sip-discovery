@@ -37,7 +37,7 @@ function checkText(text) {
       const before = s.slice(Math.max(0, m.index - 24), m.index);
       if (NEGATION.test(before)) continue;
       // "No one can promise when your money will grow" is the safe answer, not a prediction.
-      if (name === "return or market prediction") { const sent = s.slice(0, m.index).split(/[.!?।]\s/).pop(); if (/\b(no one|nobody|can'?t|cannot|can not|not possible|impossible|no guarantee|isn'?t|is not|not)\b|koi nahi|नहीं/i.test(sent)) continue; }
+      if (name === "return or market prediction") { const before = s.slice(0, m.index).split(/[.!?।]\s/).pop(); const after = s.slice(m.index).split(/[.!?।](\s|$)/)[0]; if (/\b(no one|nobody|can'?t|cannot|can not|not possible|impossible|no guarantee|isn'?t|is not|not|koi)\b|नहीं|कोई/i.test(before) || /\b(nahi|nahin|not)\b|नहीं/i.test(after)) continue; }
     }
     flags.push(name);
   }
