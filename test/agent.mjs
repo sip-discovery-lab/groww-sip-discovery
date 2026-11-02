@@ -33,7 +33,7 @@ t("portfolio numbers", st.sips.map(s => s.invested).join() === "6000,8000,1000" 
 let r = await call("/"); t("app page", r.status === 200 && /SIP Care/.test(r.body) && /not an official Groww product/.test(r.body));
 r = await call("/sw.js"); t("service worker", /addEventListener\("push"/.test(r.body) && /#\/note\//.test(r.body));
 r = await call("/quality"); t("quality page", /How SIP Care is tested/.test(r.body));
-r = await call("/discovery"); t("discovery report page", r.status === 200 && /325/.test(r.body) && /quit after one failed instalment/.test(r.body));
+r = await call("/discovery"); t("discovery report page", r.status === 200 && /325/.test(r.body) && /drift and put their SIP at risk/.test(r.body));
 
 // ---- launch: everything normal ----
 r = await call("/api/agent/start", {}); let sid = r.body.session_id; let v = r.body.view;
